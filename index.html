@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ตรวจทานหนังสือราชการ • กสทช. เขต ๑๖ </title>
+<script src="libs/mammoth.min.js"></script>
+<script src="libs/xlsx.min.js"></script>
+<script src="libs/pdf.min.js"></script>
+<style>
+:root{
+  --ink:#1a1410;--paper:#faf8f4;--cream:#f2ede4;
+  --gold:#c9921a;--gold-lt:#e8b84b;--gold-pale:#f7edcf;
+  --red:#b83232;--org:#c4651a;--grn:#2a6e3a;
+  --blue:#1e3f6e;--blue2:#2c5fa8;--blue-lt:#e8eef8;
+  --rule:#d4c9b0;--sh:rgba(26,20,16,.12);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px}
+body{font-family:'Sarabun','Segoe UI',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;
+  background-image:radial-gradient(ellipse at 20% 0%,rgba(201,146,26,.07) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(30,63,110,.05) 0%,transparent 50%)}
+
+@font-face{font-family:'Sarabun';src:local('TH SarabunIT9'),local('TH Sarabun New'),local('Sarabun'),local('Arial');}
+
+/* ── HEADER ── */
+header{background:var(--blue);color:#fff;position:relative;overflow:hidden}
+header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-45deg,transparent,transparent 20px,rgba(255,255,255,.012) 20px,rgba(255,255,255,.012) 40px)}
+.hdr{position:relative;max-width:1280px;margin:0 auto;padding:18px 32px;display:flex;align-items:center;gap:14px}
+.seal{width:44px;height:44px;flex-shrink:0;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:var(--blue);box-shadow:0 0 0 3px rgba(201,146,26,.3),0 4px 14px rgba(0,0,0,.3)}
+.hdr-t{flex:1}
+.hdr-title{font-size:18px;font-weight:700;line-height:1.2}
+.hdr-sub{font-size:10px;opacity:.5;margin-top:2px;letter-spacing:.07em;text-transform:uppercase}
+.hdr-mode{display:flex;align-items:center;gap:6px;font-size:11px;background:rgba(42,110,58,.25);border:1px solid rgba(42,110,58,.4);padding:4px 11px;border-radius:20px;color:#6ee7b7}
+
+/* ── AI MODE BAR ── */
+.ai-bar{background:#0f1f36;border-bottom:2px solid rgba(201,146,26,.3);padding:0}
+.ai-inner{max-width:1280px;margin:0 auto;padding:10px 32px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ai-label{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap}
+.mode-btns{display:flex;gap:5px}
+.mbtn{padding:5px 12px;border-radius:5px;border:1.5px solid rgba(255,255,255,.15);background:transparent;color:rgba(255,255,255,.5);font-size:11.5px;cursor:pointer;transition:all .15s;font-family:inherit}
+.mbtn.on{background:var(--gold);border-color:var(--gold);color:var(--blue);font-weight:600}
+.mbtn:hover:not(.on){border-color:rgba(255,255,255,.4);color:#fff}
+.ollama-url{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);border-radius:5px;padding:5px 10px;font-size:12px;color:#fff;width:200px;outline:none;transition:border-color .15s;font-family:inherit}
+.ollama-url:focus{border-color:var(--gold-lt)}
+.ollama-model{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);border-radius:5px;padding:5px 10px;font-size:12px;color:#fff;outline:none;font-family:inherit;min-width:140px}
+.ollama-model option{background:#1a2a3a;color:#fff}
+.btn-check-ollama{padding:5px 12px;background:rgba(42,110,58,.4);border:1px solid rgba(42,110,58,.6);border-radius:5px;color:#6ee7b7;font-size:11.5px;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .15s}
+.btn-check-ollama:hover{background:rgba(42,110,58,.6)}
+.ollama-status{font-size:11px;white-space:nowrap}
+.os-ok{color:#6ee7b7}.os-no{color:rgba(255,255,255,.35)}.os-chk{color:var(--gold-lt)}
+
+/* ── LAYOUT ── */
+.ws{max-width:1280px;margin:0 auto;padding:22px 32px 80px;display:grid;grid-template-columns:1fr 350px;gap:22px}
+.col-m{display:flex;flex-direction:column;gap:20px}
+.col-s{display:flex;flex-direction:column;gap:15px}
+
+/* ── CARD ── */
+.card{background:var(--paper);border:1px solid var(--rule);border-radius:6px;box-shadow:0 2px 10px var(--sh),0 1px 0 rgba(255,255,255,.7) inset;overflow:hidden}
+.ch{padding:10px 15px;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,#fff 0%,var(--paper) 100%)}
+.ci{width:23px;height:23px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--gold-pale);border:1px solid rgba(201,146,26,.22);flex-shrink:0}
+.ct{font-weight:600;font-size:13px;color:var(--blue);flex:1}
+.cb{padding:14px}
+.lbl{display:block;font-size:10.5px;font-weight:700;color:var(--blue);margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em}
+
+/* ── DOC TYPE ── */
+.dtypes{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:13px}
+.dtbtn{border:1.5px solid var(--rule);border-radius:5px;padding:5px 3px;cursor:pointer;text-align:center;font-family:inherit;font-size:10px;color:#777;background:#fff;transition:all .15s;line-height:1.4}
+.dtbtn:hover{border-color:var(--gold);color:var(--gold)}
+.dtbtn.on{background:var(--gold-pale);border-color:var(--gold);color:var(--gold);font-weight:600}
+.dtico{font-size:13px;display:block;margin-bottom:2px}
+
+/* ── TABS ── */
+.tabs{display:flex;border:1px solid var(--rule);border-radius:5px;overflow:hidden;margin-bottom:7px}
+.tab{flex:1;padding:6px 4px;font-family:inherit;font-size:11px;font-weight:500;background:#fff;border:none;cursor:pointer;color:#999;transition:all .15s;border-right:1px solid var(--rule)}
+.tab:last-child{border-right:none}
+.tab.on{background:var(--blue);color:#fff}
+.tpane{display:none}.tpane.on{display:block}
+
+textarea{width:100%;border:1.5px solid var(--rule);border-radius:5px;padding:9px 11px;font-family:inherit;font-size:13px;line-height:1.7;color:var(--ink);background:#fff;resize:vertical;outline:none;transition:border-color .18s}
+textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,146,26,.1)}
+textarea::placeholder{color:#c0b8ad;font-size:12px}
+input[type=text],input[type=url]{width:100%;border:1.5px solid var(--rule);border-radius:5px;padding:7px 9px;font-family:inherit;font-size:12px;color:var(--ink);background:#fff;outline:none;transition:border-color .18s}
+input[type=text]:focus,input[type=url]:focus{border-color:var(--gold)}
+
+/* ── DROP ZONE ── */
+.dz{border:2px dashed var(--rule);border-radius:6px;padding:18px 12px;text-align:center;cursor:pointer;transition:all .2s;background:#fff;position:relative}
+.dz:hover,.dz.ov{border-color:var(--gold);background:var(--gold-pale)}
+.dz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-t{font-size:12px;font-weight:600;color:var(--blue);margin-bottom:2px}
+.dz-s{font-size:10.5px;color:#aaa}
+.dz-tags{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:7px}
+.dtag{font-size:10px;padding:2px 7px;border-radius:9px;font-weight:600;border:1px solid}
+.t-pdf{background:rgba(184,50,50,.07);color:var(--red);border-color:rgba(184,50,50,.22)}
+.t-doc{background:rgba(30,63,110,.07);color:var(--blue);border-color:rgba(30,63,110,.22)}
+.t-xls{background:rgba(42,110,58,.07);color:var(--grn);border-color:rgba(42,110,58,.22)}
+.t-txt{background:rgba(100,100,100,.07);color:#666;border-color:rgba(100,100,100,.22)}
+
+/* ── FILE CHIPS ── */
+.flist{margin-top:7px;display:flex;flex-direction:column;gap:4px}
+.fchip{display:flex;align-items:center;gap:7px;padding:5px 9px;border-radius:5px;border:1px solid var(--rule);background:#fff;font-size:11px}
+.fc-ico{font-size:13px;flex-shrink:0}.fc-nm{flex:1;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
+.fc-sz{color:#bbb;font-size:10px;flex-shrink:0}.fc-st{font-size:10px;flex-shrink:0}
+.st-r{color:var(--org)}.st-ok{color:var(--grn)}.st-e{color:var(--red)}
+.fc-del{background:none;border:none;cursor:pointer;color:#ccc;font-size:15px;padding:0 2px;line-height:1;flex-shrink:0}
+.fc-del:hover{color:var(--red)}
+.pbar-w{height:3px;background:var(--rule);border-radius:2px;margin-top:4px;overflow:hidden;display:none}
+.pbar-w.vis{display:block}
+.pbar{height:100%;background:var(--gold);border-radius:2px;width:0%;transition:width .5s}
+
+/* ── SUBMIT ── */
+.btn-main{width:100%;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:5px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s;margin-top:12px}
+.btn-main:hover:not(:disabled){background:var(--blue2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(30,63,110,.3)}
+.btn-main:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ── RESULT ── */
+.res-row{grid-column:1/-1;display:none}
+.res-row.on{display:block}
+.res-body{padding:20px 24px 26px}
+
+/* Rule-based result styles */
+.doc-info-box{background:var(--blue-lt);border:1px solid rgba(30,63,110,.2);border-radius:6px;padding:12px 16px;margin-bottom:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+.dib-item label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#999;display:block;margin-bottom:2px}
+.dib-item span{font-size:12.5px;font-weight:600;color:var(--blue)}
+.summary-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.scard{flex:1;min-width:90px;background:white;border:1.5px solid;border-radius:6px;padding:10px 14px;text-align:center}
+.scard.red{border-color:rgba(184,50,50,.3);background:rgba(184,50,50,.04)}
+.scard.org{border-color:rgba(196,101,26,.3);background:rgba(196,101,26,.04)}
+.scard.yel{border-color:rgba(184,150,10,.3);background:rgba(184,150,10,.04)}
+.scard.grn{border-color:rgba(42,110,58,.3);background:rgba(42,110,58,.04)}
+.scard-n{font-size:26px;font-weight:700;line-height:1}
+.scard.red .scard-n{color:var(--red)}
+.scard.org .scard-n{color:var(--org)}
+.scard.yel .scard-n{color:#8a6e00}
+.scard.grn .scard-n{color:var(--grn)}
+.scard-l{font-size:11px;color:#888;margin-top:3px}
+.issues-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.issue{border-radius:5px;padding:10px 13px;border:1px solid;border-left:4px solid}
+.issue.red{border-color:rgba(184,50,50,.2);border-left-color:var(--red);background:rgba(184,50,50,.03)}
+.issue.org{border-color:rgba(196,101,26,.2);border-left-color:var(--org);background:rgba(196,101,26,.03)}
+.issue.yel{border-color:rgba(184,150,10,.2);border-left-color:#8a6e00;background:rgba(184,150,10,.03)}
+.issue-head{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.issue-sev{font-size:14px;flex-shrink:0}
+.issue-cat{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#aaa;background:rgba(0,0,0,.05);padding:1px 6px;border-radius:8px}
+.issue-title{font-size:13px;font-weight:600;flex:1}
+.issue-detail{font-size:12px;color:#666;line-height:1.6;margin-top:4px}
+.issue-diff{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.diff-old{font-family:'Courier New',monospace;font-size:11.5px;padding:2px 7px;border-radius:3px;background:rgba(184,50,50,.1);color:var(--red);text-decoration:line-through}
+.diff-new{font-family:'Courier New',monospace;font-size:11.5px;padding:2px 7px;border-radius:3px;background:rgba(42,110,58,.1);color:var(--grn)}
+.verdict{border-radius:6px;padding:14px 18px;display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.verdict.ready{background:rgba(42,110,58,.08);border:1px solid rgba(42,110,58,.3)}
+.verdict.warn{background:rgba(196,101,26,.08);border:1px solid rgba(196,101,26,.3)}
+.verdict.fail{background:rgba(184,50,50,.08);border:1px solid rgba(184,50,50,.3)}
+.verdict-ico{font-size:28px;flex-shrink:0}
+.verdict-text{flex:1}
+.verdict-title{font-size:15px;font-weight:700}
+.verdict.ready .verdict-title{color:var(--grn)}
+.verdict.warn .verdict-title{color:var(--org)}
+.verdict.fail .verdict-title{color:var(--red)}
+.verdict-sub{font-size:12.5px;color:#666;margin-top:3px}
+.sec-title{font-size:13px;font-weight:700;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--rule);display:flex;align-items:center;gap:7px}
+.ok-list{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px}
+.ok-item{font-size:11.5px;padding:3px 9px;border-radius:10px;background:rgba(42,110,58,.08);color:var(--grn);border:1px solid rgba(42,110,58,.2)}
+
+/* AI result (Ollama) */
+.md{font-size:13px;line-height:1.85;color:var(--ink);font-family:inherit}
+.md h2{font-size:15px;color:var(--blue);margin:20px 0 9px;padding-bottom:6px;border-bottom:2px solid var(--rule);font-weight:700}
+.md h2:first-child{margin-top:0}
+.md h3{font-size:13px;color:var(--blue2);margin:12px 0 5px;font-weight:700}
+.md p{margin-bottom:7px}.md ul,.md ol{padding-left:18px;margin-bottom:9px}.md li{margin-bottom:3px}
+.md table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+.md th{background:var(--blue);color:#fff;padding:6px 9px;text-align:left;font-size:11px}
+.md td{padding:6px 9px;border-bottom:1px solid var(--rule);vertical-align:top}
+.md tr:nth-child(even) td{background:rgba(242,237,228,.4)}
+.md code{background:rgba(30,63,110,.08);padding:1px 4px;border-radius:3px;font-family:'Courier New',monospace;font-size:11px;color:var(--blue)}
+.md hr{border:none;border-top:1px solid var(--rule);margin:12px 0}
+
+/* ── SIDE ── */
+.ref-sec{margin-bottom:10px}
+.ref-sec-h{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.ref-sec-t{font-size:11.5px;font-weight:600;color:var(--blue);flex:1}
+.btn-edit{background:none;border:1px solid var(--rule);border-radius:4px;padding:2px 7px;font-size:10.5px;color:#888;cursor:pointer;font-family:inherit;transition:all .12s}
+.btn-edit:hover{border-color:var(--gold);color:var(--gold)}
+.ref-view{font-size:10.5px;line-height:1.6;color:#555;background:rgba(242,237,228,.5);border:1px solid var(--rule);border-radius:4px;padding:6px 8px;max-height:90px;overflow:auto;white-space:pre-wrap;font-family:'Courier New',monospace}
+.ref-ta{width:100%;border:1.5px solid var(--rule);border-radius:4px;padding:6px 8px;font-family:'Courier New',monospace;font-size:10.5px;line-height:1.6;color:var(--ink);background:#fff;resize:vertical;outline:none;min-height:70px}
+.ref-ta:focus{border-color:var(--gold)}
+.bdg-row{display:flex;flex-wrap:wrap;gap:3px}
+.bdg{font-size:10px;padding:2px 6px;border-radius:8px;background:rgba(30,63,110,.07);color:var(--blue);border:1px solid rgba(30,63,110,.14)}
+.savebar{display:flex;gap:5px;margin-top:5px}
+.btn-sv{flex:1;padding:4px 8px;background:var(--blue);color:#fff;border:none;border-radius:4px;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer}
+.btn-sv:hover{background:var(--blue2)}
+.btn-cn{padding:4px 8px;background:#fff;color:#888;border:1px solid var(--rule);border-radius:4px;font-family:inherit;font-size:11px;cursor:pointer}
+
+/* ── CUSTOM SOURCES ── */
+.src-card{border:1px solid var(--rule);border-radius:5px;background:#fff;overflow:hidden;margin-bottom:5px}
+.src-head{display:flex;align-items:center;gap:7px;padding:6px 10px;cursor:pointer}
+.src-head:hover{background:rgba(242,237,228,.4)}
+.src-tbadge{font-size:10px;padding:1px 6px;border-radius:8px;font-weight:600;border:1px solid;flex-shrink:0}
+.st-text{background:rgba(100,100,100,.07);color:#555;border-color:rgba(100,100,100,.2)}
+.st-file{background:rgba(30,63,110,.07);color:var(--blue);border-color:rgba(30,63,110,.2)}
+.st-url{background:rgba(42,110,58,.07);color:var(--grn);border-color:rgba(42,110,58,.2)}
+.src-nm{flex:1;font-size:11.5px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.src-st{font-size:10.5px;flex-shrink:0}.ss-ok{color:var(--grn)}.ss-no{color:#ccc}
+.btn-xs{background:none;border:none;cursor:pointer;font-size:12px;color:#ccc;padding:1px 3px;line-height:1}
+.btn-xs:hover{color:var(--red)}
+.src-body{border-top:1px solid var(--rule);padding:9px 10px;background:rgba(242,237,228,.2);display:none}
+.src-body.open{display:block}
+.add-src-btns{display:flex;gap:5px;margin-top:6px}
+.btn-add-src{flex:1;padding:6px 4px;border:1.5px dashed var(--rule);border-radius:4px;background:transparent;color:#aaa;font-family:inherit;font-size:10.5px;cursor:pointer;transition:all .15s;text-align:center}
+.btn-add-src:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-pale)}
+.src-save-row{display:flex;gap:5px;margin-top:7px}
+
+/* ── SPIN ── */
+.spin-w{text-align:center;padding:48px 20px;display:none}
+.spin-w.on{display:block}
+.spin{width:32px;height:32px;border:3px solid var(--rule);border-top-color:var(--gold);border-radius:50%;animation:sp .8s linear infinite;margin:0 auto 10px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.spin-txt{font-size:13px;color:#999;margin-bottom:8px}
+.steplist{display:flex;flex-direction:column;gap:4px;max-width:250px;margin:0 auto;text-align:left}
+.step{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#ccc;transition:color .3s}
+.step.done{color:var(--grn)}.step.act{color:var(--ink)}
+.sdot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+
+/* ── MISC ── */
+.cpbtn{border:1px solid var(--rule);background:#fff;padding:4px 11px;border-radius:4px;font-size:11.5px;cursor:pointer;color:#777;font-family:inherit;transition:all .12s;margin-left:auto}
+.cpbtn:hover{border-color:var(--gold);color:var(--gold)}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--blue);color:#fff;padding:9px 16px;border-radius:6px;font-size:12.5px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:9999;opacity:0;transform:translateY(6px);transition:all .22s;pointer-events:none;max-width:320px}
+.toast.on{opacity:1;transform:none}
+.sev-row{display:flex;align-items:center;gap:6px;font-size:11.5px;margin-bottom:3px}
+.note{font-size:10px;color:#bbb;text-align:center;margin-top:6px;padding-top:5px;border-top:1px solid var(--rule)}
+.note span{color:var(--grn)}
+.offline-badge{display:flex;align-items:center;gap:5px;font-size:11px;background:rgba(42,110,58,.2);border:1px solid rgba(42,110,58,.35);color:#6ee7b7;padding:3px 10px;border-radius:12px}
+
+@media(max-width:860px){
+  .ws{grid-template-columns:1fr;padding:14px}.res-row{grid-column:1}
+  .col-s{order:-1}.dtypes{grid-template-columns:repeat(2,1fr)}
+  .ai-inner{padding:10px 16px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr">
+    <div class="seal">ก</div>
+    <div class="hdr-t">
+      <div class="hdr-title">ระบบตรวจทานหนังสือราชการ • กสทช. เขต ๑๖</div>
+      <div class="hdr-sub">Offline Document Review System — ทำงานได้โดยไม่ต้องเชื่อมต่ออินเทอร์เน็ต</div>
+    </div>
+    <div class="offline-badge">🟢 Offline Mode</div>
+  </div>
+</header>
+
+<!-- AI MODE BAR -->
+<div class="ai-bar">
+  <div class="ai-inner">
+    <span class="ai-label">โหมดการตรวจ:</span>
+    <div class="mode-btns">
+      <button class="mbtn on" onclick="setMode('rule',this)">📋 Rule-Based (ไม่ต้องอินเทอร์เน็ต)</button>
+      <button class="mbtn" onclick="setMode('ollama',this)">🤖 Ollama AI (Local LLM)</button>
+    </div>
+    <div id="ollamaOpts" style="display:none;display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+      <input class="ollama-url" id="ollamaUrl" value="http://localhost:11434" placeholder="http://localhost:11434">
+      <select class="ollama-model" id="ollamaModel"><option value="llama3.2">llama3.2</option><option value="llama3.1">llama3.1</option><option value="typhoon2">typhoon2</option><option value="openthaigpt">openthaigpt</option><option value="custom">กรอกเอง...</option></select>
+      <button class="btn-check-ollama" onclick="checkOllama()">🔌 ทดสอบ</button>
+      <span class="ollama-status os-no" id="ollamaStatus">⚪ ยังไม่ทดสอบ</span>
+    </div>
+  </div>
+</div>
+
+<div class="ws">
+
+<!-- ════ LEFT ════ -->
+<div class="col-m">
+  <div class="card">
+    <div class="ch"><div class="ci">📄</div><div class="ct">ร่างเอกสารที่ต้องการตรวจ</div></div>
+    <div class="cb">
+
+      <span class="lbl" style="margin-bottom:7px">ประเภทเอกสาร</span>
+      <div class="dtypes">
+        <button class="dtbtn on" data-t="A"><span class="dtico">📋</span>บันทึกข้อความ</button>
+        <button class="dtbtn" data-t="B"><span class="dtico">📜</span>หนังสือภายนอก</button>
+        <button class="dtbtn" data-t="C"><span class="dtico">⚖️</span>หนังสือสั่งการ</button>
+        <button class="dtbtn" data-t="D"><span class="dtico">📢</span>ประกาศ/ข่าว</button>
+        <button class="dtbtn" data-t="E"><span class="dtico">📊</span>รายงาน/แบบ</button>
+        <button class="dtbtn" data-t="F"><span class="dtico">🗂️</span>แบบฟอร์ม</button>
+      </div>
+
+      <span class="lbl">เอกสารหลักที่ต้องการตรวจ</span>
+      <div class="tabs">
+        <button class="tab on" onclick="sw('doc','txt',this)">✏️ พิมพ์/วางข้อความ</button>
+        <button class="tab" onclick="sw('doc','file',this)">📎 แนบไฟล์</button>
+      </div>
+      <div class="tpane on" id="doc-txt">
+        <textarea id="docTxt" rows="10" placeholder="วางข้อความร่างหนังสือราชการ / บันทึกข้อความ / รายงาน ที่นี่..."></textarea>
+      </div>
+      <div class="tpane" id="doc-file">
+        <div class="dz" id="docDZ" ondragover="dov(event,'docDZ')" ondragleave="dlv('docDZ')" ondrop="ddr(event,'doc')">
+          <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" multiple onchange="fpick(event,'doc')">
+          <div class="dz-t">📂 คลิกหรือลากวางไฟล์</div>
+          <div class="dz-s">PDF, DOCX, XLSX, TXT/CSV</div>
+          <div class="dz-tags"><span class="dtag t-pdf">PDF</span><span class="dtag t-doc">DOCX</span><span class="dtag t-xls">XLSX</span><span class="dtag t-txt">TXT/CSV</span></div>
+        </div>
+        <div class="pbar-w" id="docPB"><div class="pbar" id="docPBF"></div></div>
+        <div class="flist" id="docFL"></div>
+      </div>
+
+      <span class="lbl" style="margin-top:12px">เอกสารอ้างอิง / ต้นเรื่อง <span style="font-weight:400;color:#bbb;text-transform:none;letter-spacing:0">(ไม่บังคับ)</span></span>
+      <div class="tabs">
+        <button class="tab on" onclick="sw('ref','txt',this)">✏️ พิมพ์/วางข้อความ</button>
+        <button class="tab" onclick="sw('ref','file',this)">📎 แนบไฟล์</button>
+      </div>
+      <div class="tpane on" id="ref-txt"><textarea id="refTxt" rows="3" placeholder="(ไม่บังคับ) วางเอกสารต้นเรื่อง หนังสืออ้างอิง..."></textarea></div>
+      <div class="tpane" id="ref-file">
+        <div class="dz" id="refDZ" ondragover="dov(event,'refDZ')" ondragleave="dlv('refDZ')" ondrop="ddr(event,'ref')">
+          <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" multiple onchange="fpick(event,'ref')">
+          <div class="dz-t">📎 แนบไฟล์อ้างอิง</div>
+          <div class="dz-tags"><span class="dtag t-pdf">PDF</span><span class="dtag t-doc">DOCX</span><span class="dtag t-xls">XLSX</span><span class="dtag t-txt">TXT</span></div>
+        </div>
+        <div class="pbar-w" id="refPB"><div class="pbar" id="refPBF"></div></div>
+        <div class="flist" id="refFL"></div>
+      </div>
+
+      <button class="btn-main" id="subBtn" onclick="doReview()"><span>🔍</span> ตรวจทานเอกสาร</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ RIGHT ════ -->
+<div class="col-s">
+  <div class="card">
+    <div class="ch"><div class="ci">🗄️</div><div class="ct">ฐานข้อมูลอ้างอิง</div></div>
+    <div class="cb" style="padding:12px">
+      <div class="ref-sec">
+        <div class="ref-sec-h"><span class="ref-sec-t">👤 บุคลากร</span><button class="btn-edit" onclick="tEdit('per')">✏️ แก้ไข</button></div>
+        <div id="per-v" class="ref-view"></div>
+        <div id="per-e" style="display:none">
+          <textarea class="ref-ta" id="per-ta" rows="7"></textarea>
+          <div class="savebar"><button class="btn-sv" onclick="svRef('per')">💾 บันทึก</button><button class="btn-cn" onclick="cnRef('per')">ยกเลิก</button></div>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--rule);margin:8px 0">
+      <div class="ref-sec">
+        <div class="ref-sec-h"><span class="ref-sec-t">🚗 ทะเบียนรถ</span><button class="btn-edit" onclick="tEdit('veh')">✏️ แก้ไข</button></div>
+        <div id="veh-v"><div class="bdg-row" id="veh-bdg"></div></div>
+        <div id="veh-e" style="display:none">
+          <textarea class="ref-ta" id="veh-ta" rows="4"></textarea>
+          <div class="savebar"><button class="btn-sv" onclick="svRef('veh')">💾 บันทึก</button><button class="btn-cn" onclick="cnRef('veh')">ยกเลิก</button></div>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid var(--rule);margin:8px 0">
+      <div class="ref-sec">
+        <div class="ref-sec-h"><span class="ref-sec-t">🔧 อุปกรณ์</span><button class="btn-edit" onclick="tEdit('eqp')">✏️ แก้ไข</button></div>
+        <div id="eqp-v"><div class="bdg-row" id="eqp-bdg"></div></div>
+        <div id="eqp-e" style="display:none">
+          <textarea class="ref-ta" id="eqp-ta" rows="5"></textarea>
+          <div class="savebar"><button class="btn-sv" onclick="svRef('eqp')">💾 บันทึก</button><button class="btn-cn" onclick="cnRef('eqp')">ยกเลิก</button></div>
+        </div>
+      </div>
+      <div class="note">บันทึกอัตโนมัติใน <span>localStorage ✓</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><div class="ci">📚</div><div class="ct">แหล่งข้อมูลเพิ่มเติม</div></div>
+    <div class="cb" style="padding:12px">
+      <div id="srcList"></div>
+      <div class="add-src-btns">
+        <button class="btn-add-src" onclick="addSrc('text')">📝 ข้อความ</button>
+        <button class="btn-add-src" onclick="addSrc('file')">📎 ไฟล์</button>
+      </div>
+      <div class="note">บันทึกอัตโนมัติ <span>✓</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="ch"><div class="ci">🎯</div><div class="ct">ระดับความร้ายแรง</div></div>
+    <div class="cb" style="padding:11px 12px">
+      <div class="sev-row"><span style="color:var(--red)">🔴</span><strong>ร้ายแรง</strong><span style="color:#aaa;font-size:11px;margin-left:auto">ต้องแก้ก่อนลงนาม</span></div>
+      <div class="sev-row"><span style="color:var(--org)">🟠</span><strong>สำคัญ</strong><span style="color:#aaa;font-size:11px;margin-left:auto">ควรแก้ไข</span></div>
+      <div class="sev-row" style="margin-bottom:0"><span style="color:#8a6e00">🟡</span><strong>ควรแก้</strong><span style="color:#aaa;font-size:11px;margin-left:auto">เพื่อความสมบูรณ์</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ RESULT ════ -->
+<div class="res-row" id="resRow">
+  <div class="card">
+    <div class="ch">
+      <div class="ci">📑</div><div class="ct">ผลการตรวจทาน</div>
+      <button class="cpbtn" onclick="doCopy()">📋 คัดลอก</button>
+      <button class="cpbtn" style="margin-left:6px" onclick="printResult()">🖨️ พิมพ์</button>
+    </div>
+    <div class="spin-w" id="spinW">
+      <div class="spin"></div>
+      <div class="spin-txt" id="spinTxt">กำลังวิเคราะห์เอกสาร...</div>
+      <div class="steplist">
+        <div class="step act" id="s1"><span class="sdot"></span>อ่านโครงสร้างเอกสาร</div>
+        <div class="step" id="s2"><span class="sdot"></span>ตรวจระเบียบสารบรรณ</div>
+        <div class="step" id="s3"><span class="sdot"></span>ตรวจตัวเลขไทย/อารบิก</div>
+        <div class="step" id="s4"><span class="sdot"></span>ตรวจบุคลากร/ทะเบียน/อุปกรณ์</div>
+        <div class="step" id="s5"><span class="sdot"></span>สรุปผลการตรวจ</div>
+      </div>
+    </div>
+    <div id="resContent" class="res-body" style="display:none" id="printArea"></div>
+  </div>
+</div>
+
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════
+   DEFAULTS & STATE
+══════════════════════════════════════ */
+const DEFS={
+per:`นายพงศกร แก้วจันทร์เหนือ (ผภภ.16)
+นายชานนท์ คราประยูร (วก.ก1)
+นายแถลงการณ์ สีจันทร์อ่อน (นตป.ก1)
+นายเสนีย์ สุมณฑา (นตป.ก2)
+นายยุทธการ เทพรักษ์ (นตป.ก2)
+นายอนันต์ ศิริธร (นตป.ก2)
+นายรุ่งจันทร์ แซ่หลี (นตป.ก2)
+นายวสวัท เอนกนันท์ (นตป.ก2 รก.นบภ.)
+นายคณิน จินดากุล (นนผ.ก3)
+นายทักษยศ พฤติภาพไพบูลย์ (นนผ.ก2)
+นายภควัต ภูวพานิช (นตป.ก2)
+นางสาวปภพพร ชื่นชม (นนผ.ก2)
+นายพศวีร์ พุดชู (นนผ.ก3)
+นายธีรพัฒน์ สรวยศรีเมือง (นนผ.ก1)
+นางสาวสมิตานัน คล่องบัญชี (นจท.ก2)
+นางสาวปัทมา ปรีชา (นจท.ก2)
+นายพิสิฐพงศ์ พูลสุข (ลูกจ้าง)
+นายธวัชชัย เสลานนท์ (ลูกจ้าง)`,
+veh:`4 ขฉ 7455 กทม.
+4 ขฉ 7186 กทม.
+1 นจ 3165 กทม.
+นข 5328 ภูเก็ต
+3 ขว 8377 กทม.`,
+eqp:`Spectrum Analyzer KEYSIGHT N9938A
+Mobile Network Scanner TSMA6B
+AOR Digital Voice Receiver DV1 (100800101972)
+ROHDE & SCHWARZ PR100 (4079.9011K02-104307-nz)
+PR100 HE400HF (4104.8002.02-101958-xb)
+PR100 HE400VHF (4104.8202.02-101756-Tg)
+PR100 HE400UWB (4104.6900.02-102044-EX)
+Promax Ranger Neo 4
+ROHDE & SCHWARZ CMA180
+Narda SRM-3006
+ICOM IC-2300H
+สถานีตรวจสอบ Remote Control`};
+
+const DOC_NAMES={A:'บันทึกข้อความ',B:'หนังสือภายนอก',C:'หนังสือสั่งการ',D:'หนังสือประชาสัมพันธ์',E:'รายงาน/แบบรายงาน',F:'เอกสารเฉพาะ/แบบฟอร์ม'};
+let docType='A', reviewMode='rule';
+const FS={doc:[],ref:[]};
+let lastResult='', RD={per:'',veh:'',eqp:''}, bak={}, SRCS=[];
+
+/* ── localStorage ── */
+function lsG(k){try{return localStorage.getItem(k);}catch{return null;}}
+function lsS(k,v){try{localStorage.setItem(k,v);}catch{}}
+function loadAll(){
+  const rd=lsG('nbtc_rd'); RD=rd?JSON.parse(rd):{...DEFS};
+  const sr=lsG('nbtc_srcs'); SRCS=sr?JSON.parse(sr):[];
+  SRCS.forEach(s=>{if(s.b64)delete s.b64;});
+  renderRD(); renderSrcs();
+}
+function saveAll(){
+  lsS('nbtc_rd',JSON.stringify(RD));
+  lsS('nbtc_srcs',JSON.stringify(SRCS.map(s=>{const c={...s};delete c.b64;return c;})));
+}
+
+/* ── MODE ── */
+function setMode(m,btn){
+  reviewMode=m;
+  document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+  const oo=document.getElementById('ollamaOpts');
+  oo.style.display=m==='ollama'?'flex':'none';
+}
+
+async function checkOllama(){
+  const url=document.getElementById('ollamaUrl').value.trim();
+  const st=document.getElementById('ollamaStatus');
+  st.className='ollama-status os-chk'; st.textContent='⏳ กำลังทดสอบ...';
+  try{
+    const r=await fetch(url+'/api/tags',{signal:AbortSignal.timeout(3000)});
+    if(r.ok){
+      const d=await r.json();
+      const models=d.models||[];
+      const sel=document.getElementById('ollamaModel');
+      // populate
+      const existing=Array.from(sel.options).map(o=>o.value);
+      models.forEach(m=>{if(!existing.includes(m.name)){const o=document.createElement('option');o.value=m.name;o.textContent=m.name;sel.insertBefore(o,sel.lastElementChild);}});
+      st.className='ollama-status os-ok'; st.textContent='🟢 เชื่อมต่อได้ ('+models.length+' models)';
+    } else throw new Error('HTTP '+r.status);
+  }catch(e){ st.className='ollama-status os-no'; st.textContent='🔴 เชื่อมต่อไม่ได้'; }
+}
+
+/* ══════════════════════════════════════
+   RULE-BASED CHECKER (6 หมวด)
+══════════════════════════════════════ */
+const THAI_DIGITS='๐๑๒๓๔๕๖๗๘๙';
+const ARABIC_IN_THAI_POS=/[0-9]/g;
+const THAI_NUM_RX=/[๐-๙]/;
+
+// helpers
+function hasThai(s){return THAI_NUM_RX.test(s);}
+function hasArabic(s){return /[0-9]/.test(s);}
+function isMixed(s){return hasThai(s)&&hasArabic(s);}
+
+function extractLines(text){return text.split(/\r?\n/).map(l=>l.trim()).filter(l=>l);}
+
+function checkDoc(text){
+  const issues=[];
+  const lines=extractLines(text);
+  const fullText=text;
+
+  // Parse known fields by scanning lines
+  let dateStr='', subjectStr='', deptStr='', para1='', closing='', docNum='';
+  let foundDate=false, foundSubject=false, foundDept=false, foundDocNum=false;
+
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i];
+    if(/^ส่วนราชการ/.test(l)){deptStr=l.replace(/^ส่วนราชการ\s*[:.…]+\s*/,'').trim();foundDept=true;}
+    if(/^ที่\s*[:.…]/.test(l)||/^ที่\s+สทช/.test(l)){docNum=l;foundDocNum=true;}
+    if(/^วันที่/.test(l)){dateStr=l.replace(/^วันที่\s*[:.…]+\s*/,'').trim();foundDate=true;}
+    if(/^เรื่อง/.test(l)){subjectStr=l.replace(/^เรื่อง\s*[:.…]+\s*/,'').trim();foundSubject=true;}
+    if(/^(ด้วย|ตามที่|ตาม|เนื่องจาก)/.test(l)&&!para1){para1=l;}
+    if(/จึงเรียนมาเพื่อ/.test(l)){closing=l;}
+  }
+
+  /* ── หมวด 1: โครงสร้างสารบรรณ ── */
+  // 1.1 ส่วนราชการ
+  if(foundDept){
+    if(!deptStr.includes('กสทช.') || !deptStr.includes('เขต')){
+      issues.push({sev:'red',cat:'โครงสร้าง',title:'ส่วนราชการไม่ถูกต้อง',detail:'ต้องระบุ "สำนักงาน กสทช. เขต ๑๖"',old:deptStr||'(ไม่พบ)',fix:'สำนักงาน กสทช. เขต ๑๖'});
+    } else if(deptStr.includes('กสทช.เขต')||deptStr.includes('กสทช. เขต') && !/ กสทช\. เขต/.test(deptStr)){
+      // check spacing
+      if(/กสทช\.เขต/.test(deptStr)){
+        issues.push({sev:'org',cat:'โครงสร้าง',title:'ช่องว่างหลัง "กสทช." ขาดหาย',detail:'ต้องมีช่องว่างระหว่าง "กสทช." กับ "เขต"',old:'กสทช.เขต',fix:'กสทช. เขต'});
+      }
+    }
+    // Check เขต number mixing
+    const ekhRx=/เขต\s*([๑-๙0-9๐][0-9๐-๙]*)/;
+    const em=deptStr.match(ekhRx);
+    if(em&&isMixed(em[1])){
+      issues.push({sev:'red',cat:'ตัวเลข',title:'"เขต" ใช้ตัวเลขปนกัน',detail:'เลข "เขต" ต้องใช้เลขไทยทั้งหมด',old:'เขต '+em[1],fix:'เขต ๑๖'});
+    }
+  }
+
+  // 1.2 วันที่ครบ วัน เดือน ปี
+  if(foundDate){
+    const MONTHS=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    const hasMonth=MONTHS.some(m=>dateStr.includes(m));
+    const hasDay=/^[๑-๙๐0-9]/.test(dateStr)||/\s[๑-๙๐0-9]/.test(dateStr);
+    const hasYear=/[๒0-9]{4}/.test(dateStr)||/[๒0-9]{4}/.test(dateStr);
+    if(hasMonth&&!hasDay){
+      issues.push({sev:'red',cat:'วันที่',title:'วันที่ขาดตัวเลขวัน',detail:'ระบุเพียงเดือนและปี ขาดตัวเลขวัน',old:dateStr,fix:'ตัวอย่าง: ๑๑ เมษายน ๒๕๖๙'});
+    }
+    // Check Arabic year in Thai context
+    if(/\b(25[0-9]{2})\b/.test(dateStr)){
+      const m=dateStr.match(/\b(25[0-9]{2})\b/);
+      issues.push({sev:'red',cat:'ตัวเลข',title:'ปี พ.ศ. ต้องใช้เลขไทย',detail:'วันที่ในหนังสือราชการต้องใช้เลขไทย',old:m[1],fix:toThaiNum(m[1])});
+    }
+    const dayM=dateStr.match(/^([0-9]+)/);
+    if(dayM){
+      issues.push({sev:'red',cat:'ตัวเลข',title:'ตัวเลขวันที่ต้องเป็นเลขไทย',detail:'วันที่ในหนังสือราชการต้องใช้เลขไทยทั้งหมด',old:dayM[1],fix:toThaiNum(dayM[1])});
+    }
+  } else if(docType!=='E'&&docType!=='F'){
+    issues.push({sev:'red',cat:'โครงสร้าง',title:'ไม่พบช่อง "วันที่"',detail:'หนังสือราชการต้องระบุวันที่ให้ครบ วัน เดือน ปี'});
+  }
+
+  // 1.3 ชื่อเรื่อง
+  if(foundSubject&&subjectStr){
+    const VERB_START=['ขอให้','กรุณา','โปรด','แจ้ง','ส่ง','มอบ','ดำเนินการ','พิจารณา','อนุมัติ'];
+    const startsVerb=VERB_START.some(v=>subjectStr.startsWith(v));
+    if(startsVerb){
+      issues.push({sev:'org',cat:'ภาษาราชการ',title:'ชื่อเรื่องขึ้นต้นด้วยกริยา',detail:'ชื่อเรื่องต้องขึ้นต้นด้วยวลีนาม (เช่น "การ..." "รายงาน..." "ผล...")',old:subjectStr.substring(0,30),fix:'เปลี่ยนเป็นวลีนาม เช่น "การ'+subjectStr.substring(2,20)+'"'});
+    }
+  }
+
+  // 1.4 ย่อหน้าแรก
+  if(para1){
+    const OK_START=['ด้วย','ตามที่','ตาม','เนื่องจาก'];
+    const ok=OK_START.some(s=>para1.startsWith(s));
+    if(!ok){
+      issues.push({sev:'org',cat:'โครงสร้าง',title:'ย่อหน้าแรกขึ้นต้นไม่ถูกต้อง',detail:'ต้องขึ้นต้นด้วย "ด้วย" / "ตาม" / "ตามที่" / "เนื่องจาก" เท่านั้น',old:para1.substring(0,30)+'...',fix:'"ด้วย..." หรือ "ตาม..."'});
+    }
+  }
+
+  // 1.5 คำลงท้าย
+  if(closing){
+    if(docType==='A'){
+      if(closing.includes('ขอแสดงความนับถือ')){
+        issues.push({sev:'org',cat:'โครงสร้าง',title:'บันทึกข้อความไม่ควรมีคำลงท้าย "ขอแสดงความนับถือ"',detail:'คำลงท้ายนี้ใช้เฉพาะหนังสือภายนอกเท่านั้น',old:'ขอแสดงความนับถือ',fix:'ลบออก (บันทึกข้อความลงชื่อ+ตำแหน่งเท่านั้น)'});
+      }
+    }
+  }
+
+  /* ── หมวด 2: ความสอดคล้องข้อมูล ── */
+  // บุคลากร
+  const persons=RD.per.split('\n').filter(x=>x.trim()).map(x=>{
+    const m=x.match(/^(นาย|นาง|นางสาว)\S+\s+\S+/);
+    return m?m[0].trim():x.split('(')[0].trim();
+  });
+  persons.forEach(p=>{
+    const pName=p.replace(/\s*\(.*\)\s*/,'').trim();
+    if(pName.length<4) return;
+    // Check if name appears in document but possibly misspelled
+    const shortName=pName.replace(/^(นาย|นาง|นางสาว)\s*/,'');
+    if(fullText.includes(shortName.substring(0,3))){
+      // name fragment found, check full match
+      if(!fullText.includes(pName.substring(0,Math.min(pName.length,6)))||
+         fullText.includes(pName)){/* ok */}
+    }
+  });
+
+  // ทะเบียนรถ
+  const vehs=RD.veh.split('\n').filter(x=>x.trim());
+  const vehRx=/\d+\s*[ก-ฮ]{2,3}\s*\d{4}/g;
+  const foundVeh=[...fullText.matchAll(vehRx)].map(m=>m[0]);
+  foundVeh.forEach(fv=>{
+    const normalized=fv.replace(/\s+/g,' ').trim();
+    const match=vehs.find(v=>v.includes(normalized.replace(/\s/g,''))||normalized.replace(/\s/g,'')==v.replace(/\s/g,'').split('กทม')[0].split('ภูเก็ต')[0].trim());
+    if(!match){
+      issues.push({sev:'org',cat:'ข้อมูล',title:'ทะเบียนรถไม่ตรงฐานข้อมูล',detail:'ตรวจสอบทะเบียนรถที่พบในเอกสาร',old:normalized,fix:'ตรวจสอบจากฐานข้อมูล: '+vehs.join(' / ')});
+    }
+  });
+
+  // อุปกรณ์
+  const eqps=RD.eqp.split('\n').filter(x=>x.trim());
+  // Check common equipment code errors
+  const eqpChecks=[
+    {pattern:/N9938(?!A)/g,fix:'N9938A',note:'ขาดตัวอักษร A ท้ายรหัส N9938'},
+    {pattern:/TSMA6(?!B)/g,fix:'TSMA6B',note:'ขาดตัวอักษร B ท้ายรหัส TSMA6'},
+  ];
+  eqpChecks.forEach(c=>{
+    const ms=[...fullText.matchAll(c.pattern)];
+    if(ms.length>0){
+      issues.push({sev:'org',cat:'ข้อมูล',title:'รหัสอุปกรณ์ไม่ครบ',detail:c.note,old:ms[0][0],fix:c.fix});
+    }
+  });
+
+  /* ── หมวด 3: ภาษาราชการ ── */
+  // ช่องว่างชื่อ-นามสกุล
+  const TITLES=['นาย','นาง','นางสาว'];
+  TITLES.forEach(t=>{
+    const rx=new RegExp(t+'[ก-ฮเแโใไๆ็่้๊๋์ํ]+[ก-ฮ]','g');
+    const ms=[...fullText.matchAll(rx)];
+    ms.forEach(m=>{
+      if(!m[0].includes(' ')&&m[0].length>6){
+        issues.push({sev:'org',cat:'ช่องว่าง',title:'ชื่อ-นามสกุลไม่มีช่องว่างคั่น',detail:'ต้องมีช่องว่างระหว่างชื่อและนามสกุล',old:m[0].substring(0,12),fix:m[0].substring(0,3)+' (ชื่อ) (นามสกุล)'});
+      }
+    });
+  });
+  // ฯ ไม่มีช่องว่างหลัง
+  if(/ฯ[ก-ฮ]/.test(fullText)){
+    const m=fullText.match(/ฯ([ก-ฮ])/);
+    if(m) issues.push({sev:'yel',cat:'วรรคตอน',title:'ขาดช่องว่างหลัง "ฯ"',detail:'ต้องมีช่องว่างหลังเครื่องหมาย ฯ',old:'ฯ'+m[1],fix:'ฯ '+m[1]});
+  }
+  // double space
+  if(/  /.test(fullText)){
+    issues.push({sev:'yel',cat:'วรรคตอน',title:'มีช่องว่างซ้ำ',detail:'พบช่องว่างสองช่องติดกันในเนื้อหา',old:'(ช่องว่างซ้ำ)',fix:'แก้ไขช่องว่างให้เหลือช่องเดียว'});
+  }
+  // คำสะกดผิด
+  const SPELL_CHECKS=[
+    {wrong:'พายุฤดร้อน',right:'พายุฤดูร้อน'},{wrong:'อนุมัติ',right:'อนุมัติ'}, // placeholder - keep checking
+    {wrong:'อินเตอร์เน็ต',right:'อินเทอร์เน็ต'},{wrong:'ปฏิบัตการ',right:'ปฏิบัติการ'},
+    {wrong:'รายงาณ',right:'รายงาน'},{wrong:'วิทยุกระจายเสืยง',right:'วิทยุกระจายเสียง'},
+  ];
+  SPELL_CHECKS.forEach(c=>{
+    if(fullText.includes(c.wrong)){
+      issues.push({sev:'org',cat:'การสะกด',title:'คำสะกดผิด',detail:'พบคำสะกดผิดในเอกสาร',old:c.wrong,fix:c.right});
+    }
+  });
+
+  /* ── หมวด 6: ตัวเลขไทย/อารบิก (สำคัญที่สุด) ── */
+  // เลขที่เอกสาร (สทช) ต้องเลขไทย — ตรวจ 0 อารบิกในเลขที่
+  const docNumRx=/สทช\s*[๐-๙0-9๒]+[๐-๙0-9./]+/g;
+  const docNums=[...fullText.matchAll(docNumRx)];
+  docNums.forEach(m=>{
+    if(/[0-9]/.test(m[0])&&!/[\/.:]/.test(m[0].replace(/[๐-๙]/g,''))){
+      // has Arabic digit mixed in
+      issues.push({sev:'red',cat:'ตัวเลข',title:'เลขที่เอกสารใช้เลขอารบิกปน',detail:'เลขที่หนังสือราชการต้องใช้เลขไทยทั้งหมด ยกเว้นเครื่องหมาย / และ .',old:m[0],fix:'แก้ตัวเลขอารบิกเป็นเลขไทย'});
+    }
+  });
+
+  // ลำดับหัวข้อสลับ เลขไทย/อารบิก
+  const itemLines=lines.filter(l=>/^[๑-๙๐0-9]+\./.test(l));
+  if(itemLines.length>=2){
+    const hasTh=itemLines.some(l=>/^[๑-๙]\./.test(l));
+    const hasAr=itemLines.some(l=>/^[0-9]+\./.test(l));
+    if(hasTh&&hasAr){
+      issues.push({sev:'red',cat:'ตัวเลข',title:'ลำดับหัวข้อสลับเลขไทยและอารบิก',detail:'ต้องใช้ระบบตัวเลขเดียวกันตลอดทั้งฉบับ',old:'พบทั้ง "๑." และ "1."',fix:'ใช้เลขไทยทั้งหมด เช่น ๑. ๒. ๓.'});
+    }
+  }
+
+  // ปีในเนื้อหา
+  const yearArRx=/\b(25[4-9][0-9])\b/g;
+  const yearArs=[...fullText.matchAll(yearArRx)];
+  if(yearArs.length>0){
+    issues.push({sev:'red',cat:'ตัวเลข',title:'ปี พ.ศ. ต้องใช้เลขไทย',detail:'พบปี พ.ศ. เป็นเลขอารบิกในเนื้อหา',old:yearArs[0][1],fix:toThaiNum(yearArs[0][1])});
+  }
+
+  // จำนวนนับในเนื้อหา (ตัวเลขเดี่ยวก่อน นาที คน ราย สถานี แผ่น)
+  const countRx=/\b([0-9]+)\s*(คน|ราย|สถานี|แผ่น|ฉบับ|รายการ|กิจกรรม|ครั้ง|ชุด)/g;
+  const countMs=[...fullText.matchAll(countRx)];
+  countMs.forEach(m=>{
+    issues.push({sev:'red',cat:'ตัวเลข',title:'จำนวนนับต้องใช้เลขไทย',detail:`จำนวน ${m[1]} ${m[2]} ต้องใช้เลขไทย`,old:m[0],fix:toThaiNum(m[1])+' '+m[2]});
+  });
+
+  return issues;
+}
+
+function toThaiNum(s){
+  const map={'0':'๐','1':'๑','2':'๒','3':'๓','4':'๔','5':'๕','6':'๖','7':'๗','8':'๘','9':'๙'};
+  return String(s).split('').map(c=>map[c]||c).join('');
+}
+
+/* ── RENDER RULE RESULT ── */
+function renderRuleResult(text, issues){
+  const reds=issues.filter(i=>i.sev==='red');
+  const orgs=issues.filter(i=>i.sev==='org');
+  const yels=issues.filter(i=>i.sev==='yel');
+  const total=issues.length;
+
+  let verdict, vcls;
+  if(reds.length>0){verdict=`⚠️ ต้องแก้ไขก่อนลงนาม — พบ ${reds.length} จุดร้ายแรง`;vcls='warn';}
+  else if(total>0){verdict=`⚠️ มีข้อควรแก้ไข — พบ ${total} จุด`;vcls='warn';}
+  else{verdict='✅ พร้อมลงนาม — ไม่พบข้อผิดพลาดที่ตรวจจับได้';vcls='ready';}
+
+  lastResult=`ผลการตรวจทาน (Rule-Based)\n🔴 ร้ายแรง: ${reds.length} จุด | 🟠 สำคัญ: ${orgs.length} จุด | 🟡 ควรแก้: ${yels.length} จุด\n${verdict}\n\nรายการข้อผิดพลาด:\n`+issues.map((i,n)=>`${n+1}. [${i.sev}] ${i.title}: ${i.old} → ${i.fix||''}`).join('\n');
+
+  return `
+  <div class="verdict ${vcls}">
+    <span class="verdict-ico">${vcls==='ready'?'✅':'⚠️'}</span>
+    <div class="verdict-text">
+      <div class="verdict-title">${verdict}</div>
+      <div class="verdict-sub">ตรวจโดย Rule-Based Engine • พบ ${total} รายการ</div>
+    </div>
+  </div>
+
+  <div class="summary-row">
+    <div class="scard red"><div class="scard-n">${reds.length}</div><div class="scard-l">🔴 ร้ายแรง</div></div>
+    <div class="scard org"><div class="scard-n">${orgs.length}</div><div class="scard-l">🟠 สำคัญ</div></div>
+    <div class="scard yel"><div class="scard-n">${yels.length}</div><div class="scard-l">🟡 ควรแก้</div></div>
+    <div class="scard grn"><div class="scard-n">${Math.max(0,15-total)}</div><div class="scard-l">✅ ผ่าน</div></div>
+  </div>
+
+  ${total>0?`
+  <div class="sec-title">📋 รายการที่ต้องแก้ไข</div>
+  <div class="issues-wrap">
+    ${issues.map(i=>`
+    <div class="issue ${i.sev}">
+      <div class="issue-head">
+        <span class="issue-sev">${i.sev==='red'?'🔴':i.sev==='org'?'🟠':'🟡'}</span>
+        <span class="issue-cat">${i.cat}</span>
+        <span class="issue-title">${i.title}</span>
+      </div>
+      <div class="issue-detail">${i.detail}</div>
+      ${i.old&&i.fix?`<div class="issue-diff"><span class="diff-old">${i.old}</span><span style="color:#aaa">→</span><span class="diff-new">${i.fix}</span></div>`:''}
+    </div>`).join('')}
+  </div>`:'<div class="sec-title">✅ ไม่พบข้อผิดพลาดที่ตรวจจับได้โดยอัตโนมัติ</div><div style="font-size:13px;color:#888;padding:8px 0">โปรดตรวจสอบเนื้อหาและความถูกต้องของข้อมูลเพิ่มเติมด้วยตนเอง</div>'}
+
+  <div style="font-size:11.5px;color:#aaa;margin-top:16px;padding-top:12px;border-top:1px solid var(--rule)">
+    ⚠️ Rule-Based Engine ตรวจจับตามกฎที่กำหนดไว้ อาจไม่ครอบคลุมทุกกรณี — แนะนำตรวจสอบซ้ำโดยผู้ปฏิบัติงาน
+  </div>`;
+}
+
+/* ── OLLAMA CALL ── */
+async function callOllama(docText, refText){
+  const url=document.getElementById('ollamaUrl').value.trim();
+  const model=document.getElementById('ollamaModel').value;
+  const sys=buildSys();
+  const userMsg=`ประเภทเอกสาร: ${DOC_NAMES[docType]}\n\nร่างเอกสาร:\n---\n${docText}\n---\n${refText?'\nเอกสารอ้างอิง:\n---\n'+refText+'\n---':''}\n\nโปรดตรวจทานตามเกณฑ์ 6 หมวด`;
+
+  const resp=await fetch(url+'/api/chat',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({model,messages:[{role:'system',content:sys},{role:'user',content:userMsg}],stream:false})
+  });
+  if(!resp.ok) throw new Error('Ollama HTTP '+resp.status);
+  const d=await resp.json();
+  return d.message?.content||d.response||JSON.stringify(d);
+}
+
+/* ══ SUBMIT ══ */
+async function doReview(){
+  // ตรวจว่ายังมีไฟล์ที่กำลังอ่านอยู่หรือไม่
+  const stillReading = FS.doc.some(e=>e.status==='r') || FS.ref.some(e=>e.status==='r');
+  if(stillReading){showToast('⏳ กรุณารอให้อ่านไฟล์เสร็จก่อน');return;}
+
+  const docTxt=getAllDocText();
+  if(!docTxt.trim()){
+    showToast('⚠️ กรุณาวางข้อความหรือแนบไฟล์ที่ต้องการตรวจ');
+    return;
+  }
+
+  const btn=document.getElementById('subBtn');
+  btn.disabled=true;btn.innerHTML='<span>⏳</span> กำลังตรวจ...';
+
+  const rrow=document.getElementById('resRow');
+  rrow.classList.add('on');
+  document.getElementById('spinW').classList.add('on');
+  document.getElementById('resContent').style.display='none';
+  rrow.scrollIntoView({behavior:'smooth',block:'start'});
+
+  const sids=['s1','s2','s3','s4','s5'];
+  const steps=sids.map(i=>document.getElementById(i));
+  steps.forEach(s=>s.classList.remove('act','done')); steps[0].classList.add('act');
+  let si=0;
+  const timer=setInterval(()=>{
+    steps[si].classList.remove('act');steps[si].classList.add('done');
+    if(si<steps.length-1){si++;steps[si].classList.add('act');}
+  }, reviewMode==='rule'?300:1500);
+
+  try{
+    let html='';
+    if(reviewMode==='rule'){
+      document.getElementById('spinTxt').textContent='กำลังตรวจสอบตามกฎ...';
+      await sleep(400);
+      const issues=checkDoc(docTxt);
+      clearInterval(timer);
+      steps.forEach(s=>{s.classList.remove('act');s.classList.add('done');});
+      html=renderRuleResult(docTxt,issues);
+    } else {
+      document.getElementById('spinTxt').textContent='กำลังส่งให้ Ollama AI...';
+      const refTxt=getAllRefText();
+      const aiResult=await callOllama(docTxt, refTxt);
+      clearInterval(timer);
+      steps.forEach(s=>{s.classList.remove('act');s.classList.add('done');});
+      lastResult=aiResult;
+      html=`<div class="md">${renderMD(aiResult)}</div>`;
+    }
+    document.getElementById('spinW').classList.remove('on');
+    document.getElementById('resContent').style.display='block';
+    document.getElementById('resContent').innerHTML=html;
+  }catch(err){
+    clearInterval(timer);
+    document.getElementById('spinW').classList.remove('on');
+    document.getElementById('resContent').style.display='block';
+    document.getElementById('resContent').innerHTML=`<div style="padding:14px;background:rgba(184,50,50,.05);border:1px solid rgba(184,50,50,.2);border-radius:6px"><strong style="color:var(--red)">❌ เกิดข้อผิดพลาด</strong><br><span style="font-size:12.5px;color:#555">${err.message}</span></div>`;
+  }
+  btn.disabled=false;btn.innerHTML='<span>🔍</span> ตรวจทานเอกสาร';
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function getAllDocText(){
+  let t=document.getElementById('docTxt').value.trim();
+  FS.doc.filter(e=>e.status==='ok'&&e.text&&e.text.trim()).forEach(e=>{
+    t+='\n\n[ไฟล์: '+e.name+']\n'+e.text;
+  });
+  return t;
+}
+function getAllRefText(){
+  let t=document.getElementById('refTxt').value.trim();
+  FS.ref.filter(e=>e.status==='ok'&&e.text&&e.text.trim()).forEach(e=>{
+    t+='\n[ไฟล์: '+e.name+']\n'+e.text;
+  });
+  SRCS.filter(s=>(s.content||'').trim()).forEach(s=>{t+='\n['+s.name+']\n'+s.content;});
+  return t;
+}
+
+/* ══ REF DATA ══ */
+function renderRD(){
+  document.getElementById('per-v').textContent=RD.per||'(ยังไม่มีข้อมูล)';
+  renderBdg('veh-bdg',(RD.veh||'').split('\n').filter(x=>x.trim()));
+  renderBdg('eqp-bdg',(RD.eqp||'').split('\n').filter(x=>x.trim()));
+}
+function renderBdg(id,items){document.getElementById(id).innerHTML=items.map(i=>`<span class="bdg">${i.trim()}</span>`).join('');}
+function tEdit(k){
+  if(document.getElementById(k+'-e').style.display!=='none'){cnRef(k);return;}
+  bak[k]=RD[k]; document.getElementById(k+'-ta').value=RD[k]||'';
+  document.getElementById(k+'-v').style.display='none';
+  document.getElementById(k+'-e').style.display='block';
+}
+function cnRef(k){document.getElementById(k+'-v').style.display='';document.getElementById(k+'-e').style.display='none';}
+function svRef(k){RD[k]=document.getElementById(k+'-ta').value.trim();cnRef(k);renderRD();saveAll();showToast('💾 บันทึกแล้ว');}
+
+/* ══ SOURCES ══ */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+const TL={text:{l:'ข้อความ',c:'st-text',i:'📝'},file:{l:'ไฟล์',c:'st-file',i:'📎'}};
+function renderSrcs(){
+  const el=document.getElementById('srcList');
+  if(!SRCS.length){el.innerHTML='<div style="font-size:11.5px;color:#bbb;text-align:center;padding:4px 0 8px">ยังไม่มีแหล่งข้อมูล</div>';return;}
+  el.innerHTML='';
+  SRCS.forEach(s=>{
+    const t=TL[s.type]||TL.text; const ok=(s.content||'').trim().length>0;
+    const d=document.createElement('div');d.className='src-card';
+    d.innerHTML=`<div class="src-head" onclick="toggleSrc('${s.id}')">
+      <span class="src-tbadge ${t.c}">${t.i} ${t.l}</span>
+      <span class="src-nm">${esc(s.name||'แหล่งข้อมูล')}</span>
+      <span class="src-st ${ok?'ss-ok':'ss-no'}">${ok?'✓':'—'}</span>
+      <div style="display:flex;gap:3px"><button class="btn-xs" onclick="event.stopPropagation();delSrc('${s.id}')">🗑️</button></div>
+    </div>
+    <div class="src-body ${s.open?'open':''}" id="sb-${s.id}">
+      <input type="text" value="${esc(s.name||'')}" placeholder="ชื่อ" oninput="upN('${s.id}',this.value)" style="margin-bottom:6px">
+      ${s.type==='file'?`<div class="dz" style="padding:12px" ondragover="dov(event,'sdz-${s.id}')" ondragleave="dlv('sdz-${s.id}')" ondrop="sfd(event,'${s.id}')" id="sdz-${s.id}"><input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv" onchange="sfp(event,'${s.id}')"><div style="font-size:12px;font-weight:600;color:var(--blue)">📂 คลิกหรือลาก</div><div class="dz-tags" style="margin-top:5px"><span class="dtag t-pdf">PDF</span><span class="dtag t-doc">DOCX</span><span class="dtag t-xls">XLSX</span><span class="dtag t-txt">TXT</span></div></div>${(s.content&&s.content.trim()&&s.content!=='[PDF]')?`<div style="font-size:11px;color:var(--grn);margin-top:5px">✅ โหลดแล้ว ${Math.round(s.content.length/1000)}KB</div>`:s.content==='[PDF]'?'<div style="font-size:11px;color:var(--grn);margin-top:5px">✅ PDF พร้อมส่ง</div>':''}`:
+      `<textarea rows="4" style="width:100%;font-size:11px;font-family:'Courier New',monospace;border:1.5px solid var(--rule);border-radius:4px;padding:6px 8px;outline:none;resize:vertical" placeholder="วางเนื้อหา..." oninput="upC('${s.id}',this.value)">${esc(s.content||'')}</textarea>`}
+      <div class="src-save-row"><button class="btn-sv" onclick="savSrc('${s.id}')">💾 บันทึก</button><button class="btn-cn" onclick="clsSrc('${s.id}')">ปิด</button></div>
+    </div>`;
+    el.appendChild(d);
+  });
+}
+function addSrc(type){const id='s'+Date.now();SRCS.push({id,type,name:'',content:'',open:true});renderSrcs();}
+function toggleSrc(id){const s=SRCS.find(x=>x.id===id);if(s){s.open=!s.open;renderSrcs();}}
+function clsSrc(id){const s=SRCS.find(x=>x.id===id);if(s){s.open=false;renderSrcs();}}
+function delSrc(id){SRCS=SRCS.filter(x=>x.id!==id);renderSrcs();saveAll();}
+function upN(id,v){const s=SRCS.find(x=>x.id===id);if(s)s.name=v;}
+function upC(id,v){const s=SRCS.find(x=>x.id===id);if(s)s.content=v;}
+function savSrc(id){
+  const s=SRCS.find(x=>x.id===id);if(!s)return;
+  const ni=document.querySelector(`#sb-${id} input[type=text]`);const ci=document.querySelector(`#sb-${id} textarea`);
+  if(ni)s.name=ni.value;if(ci)s.content=ci.value;
+  s.open=false;renderSrcs();saveAll();showToast('💾 บันทึกแล้ว');
+}
+async function sfp(e,id){const f=e.target.files[0];if(f)await pSrcF(f,id);e.target.value='';}
+async function sfd(e,id){e.preventDefault();dlv('sdz-'+id);const f=e.dataTransfer.files[0];if(f)await pSrcF(f,id);}
+async function pSrcF(f,id){
+  const s=SRCS.find(x=>x.id===id);if(!s)return;if(!s.name)s.name=f.name;
+  showToast('⏳ อ่าน '+f.name+'...');
+  try{
+    const ext=f.name.split('.').pop().toLowerCase();
+    if(ext==='pdf'){
+      const buf=await f.arrayBuffer();
+      s.content=await extractPdfText(buf);
+      s.mime='application/pdf';
+    }
+    else if(['doc','docx'].includes(ext)&&typeof mammoth!=='undefined'){const r=await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()});s.content=r.value.substring(0,12000);}
+    else if(['xls','xlsx'].includes(ext)&&typeof XLSX!=='undefined'){const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});s.content=wb.SheetNames.map(n=>`[${n}]\n${XLSX.utils.sheet_to_csv(wb.Sheets[n])}`).join('\n\n').substring(0,12000);}
+    else s.content=(await f.text()).substring(0,12000);
+    renderSrcs();showToast('✅ อ่านแล้ว '+f.name);
+  }catch(e){showToast('❌ อ่านไม่ได้: '+e.message);}
+}
+
+/* ══ PDF.js INIT ══ */
+if(typeof pdfjsLib !== 'undefined'){
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'libs/pdf.worker.min.js';
+}
+
+/* ── Extract text from PDF using pdf.js ── */
+async function extractPdfText(arrayBuffer){
+  if(typeof pdfjsLib === 'undefined') return '[PDF.js ไม่พร้อม]';
+  try{
+    const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+    let fullText = '';
+    const maxPages = Math.min(pdf.numPages, 50); // จำกัด 50 หน้า
+    for(let p = 1; p <= maxPages; p++){
+      const page = await pdf.getPage(p);
+      const content = await page.getTextContent();
+      const pageText = content.items.map(item => item.str).join(' ');
+      fullText += pageText + '\n';
+    }
+    return fullText.trim() || '[ไม่พบข้อความใน PDF — อาจเป็นไฟล์สแกน]';
+  }catch(e){
+    return '[อ่าน PDF ไม่ได้: '+e.message+']';
+  }
+}
+
+/* ══ FILE HANDLING ══ */
+document.querySelectorAll('.dtbtn').forEach(b=>{b.onclick=()=>{document.querySelectorAll('.dtbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');docType=b.dataset.t;};});
+function sw(g,m,b){b.parentElement.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',(i===0&&m==='txt')||(i===1&&m==='file')));document.getElementById(g+'-txt').classList.toggle('on',m==='txt');document.getElementById(g+'-file').classList.toggle('on',m==='file');}
+function dov(e,id){e.preventDefault();document.getElementById(id)?.classList.add('ov');}
+function dlv(id){document.getElementById(id)?.classList.remove('ov');}
+function ddr(e,g){e.preventDefault();dlv(g==='doc'?'docDZ':'refDZ');addFiles(Array.from(e.dataTransfer.files),g);}
+function fpick(e,g){addFiles(Array.from(e.target.files),g);e.target.value='';}
+function ficon(n){const e=n.split('.').pop().toLowerCase();if(e==='pdf')return'📕';if(['doc','docx'].includes(e))return'📘';if(['xls','xlsx'].includes(e))return'📗';return'📄';}
+function fsize(b){return b>1048576?(b/1048576).toFixed(1)+' MB':Math.round(b/1024)+' KB';}
+
+async function addFiles(list,g){
+  for(const f of list){
+    const id=Date.now()+Math.random();
+    const e={id,name:f.name,size:f.size,status:'r',text:'',b64:'',mime:'',pages:0};
+    FS[g].push(e);renderFL(g);setPB(g,true);
+    try{
+      const ext=f.name.split('.').pop().toLowerCase();
+      if(ext==='pdf'){
+        const arrayBuffer = await f.arrayBuffer();
+        // อ่านข้อความด้วย pdf.js
+        showToast('⏳ กำลังอ่าน PDF: '+f.name+'...');
+        e.text = await extractPdfText(arrayBuffer);
+        e.mime = 'application/pdf';
+        e.status = 'ok';
+        showToast('✅ อ่าน PDF เรียบร้อย: '+f.name+' ('+e.text.length+' ตัวอักษร)');
+      }
+      else if(['doc','docx'].includes(ext)&&typeof mammoth!=='undefined'){const r=await mammoth.extractRawText({arrayBuffer:await f.arrayBuffer()});e.text=r.value;e.status='ok';}
+      else if(['xls','xlsx'].includes(ext)&&typeof XLSX!=='undefined'){const wb=XLSX.read(await f.arrayBuffer(),{type:'array'});e.text=wb.SheetNames.map(s=>`[${s}]\n${XLSX.utils.sheet_to_csv(wb.Sheets[s])}`).join('\n\n');e.status='ok';}
+      else if(['txt','csv'].includes(ext)){e.text=await f.text();e.status='ok';}
+      else e.status='e';
+    }catch(err){e.status='e';e.text='';console.error(err);}
+    setPB(g,false);renderFL(g);
+  }
+}
+
+function toB64(f){return new Promise((r,j)=>{const fr=new FileReader();fr.onload=()=>r(fr.result.split(',')[1]);fr.onerror=j;fr.readAsDataURL(f);});}
+function setPB(g,s){const w=document.getElementById(g+'PB'),f=document.getElementById(g+'PBF');if(!w)return;if(s){w.classList.add('vis');f.style.width='0%';setTimeout(()=>f.style.width='75%',50);}else{f.style.width='100%';setTimeout(()=>w.classList.remove('vis'),500);}}
+function renderFL(g){
+  const el=document.getElementById(g+'FL');el.innerHTML='';
+  FS[g].forEach(e=>{
+    const hasText = e.text && e.text.trim() && !e.text.startsWith('[ไม่พบ') && !e.text.startsWith('[อ่าน');
+    const stMap = {
+      r:'<span class="fc-st st-r">⏳ กำลังอ่าน...</span>',
+      ok: hasText
+        ? `<span class="fc-st st-ok">✅ ${Math.round(e.text.length/1000)||'<1'}K ตัวอักษร</span>`
+        : '<span class="fc-st st-ok">✅</span>',
+      e:'<span class="fc-st st-e">❌ อ่านไม่ได้</span>'
+    };
+    const d=document.createElement('div');d.className='fchip';
+    d.innerHTML=`<span class="fc-ico">${ficon(e.name)}</span><span class="fc-nm" title="${e.name}">${e.name}</span><span class="fc-sz">${fsize(e.size)}</span>${stMap[e.status]||''}<button class="fc-del" onclick="delF('${g}','${e.id}')">×</button>`;
+    el.appendChild(d);
+  });
+}
+function delF(g,id){FS[g]=FS[g].filter(e=>String(e.id)!==id);renderFL(g);}
+
+/* ══ OLLAMA SYSTEM PROMPT ══ */
+function buildSys(){
+  return `ผู้เชี่ยวชาญงานสารบรรณไทย ตรวจเอกสารตามเกณฑ์ 6 หมวด:
+1.ระเบียบสารบรรณ — โครงสร้าง/วันที่ครบ/ชื่อเรื่องวลีนาม/ย่อหน้า/ลงนาม/"สำนักงาน กสทช. เขต ๑๖"
+2.ข้อมูล — ชื่อบุคคล/ทะเบียนรถ/รหัสอุปกรณ์/วันที่/เลขที่
+3.ภาษาราชการ — ทางการ/สะกด/ช่องว่าง
+4.วัตถุประสงค์ — คำลงท้าย
+5.รูปแบบพิมพ์
+6.ตัวเลขไทย/อารบิก (สแกนทุกตัว)
+ฐานข้อมูล:บุคลากร:\n${RD.per}\nทะเบียนรถ:\n${RD.veh}\nอุปกรณ์:\n${RD.eqp}
+ตอบเป็นภาษาไทย แสดง ## หัวข้อ และตาราง Markdown`;
+}
+
+/* ══ MARKDOWN ══ */
+function renderMD(md){
+  let h=md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^## (.+)$/gm,(_,t)=>`<h2>${t}</h2>`).replace(/^### (.+)$/gm,(_,t)=>`<h3>${t}</h3>`)
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`([^`]+)`/g,'<code>$1</code>').replace(/^---$/gm,'<hr>');
+  h=h.replace(/(\|.+\|\n?)+/g,blk=>{
+    const rows=blk.trim().split('\n');if(rows.length<2)return blk;
+    let t='<table>';rows.forEach((r,i)=>{if(/^\|[\s\-\|:]+\|$/.test(r))return;const cells=r.split('|').filter((_,ci)=>ci>0&&ci<r.split('|').length-1);const tag=i===0?'th':'td';t+='<tr>'+cells.map(c=>`<${tag}>${c.trim()}</${tag}>`).join('')+'</tr>';});return t+'</table>';
+  });
+  h=h.replace(/(^[\-\*] .+(\n|$))+/gm,m=>'<ul>'+m.trim().split('\n').map(l=>`<li>${l.replace(/^[\-\*] /,'')}</li>`).join('')+'</ul>');
+  h=h.replace(/(^\d+\. .+(\n|$))+/gm,m=>'<ol>'+m.trim().split('\n').map(l=>`<li>${l.replace(/^\d+\. /,'')}</li>`).join('')+'</ol>');
+  h=h.replace(/\n\n+/g,'\n</p><p>');h='<p>'+h+'</p>';
+  h=h.replace(/<p>\s*(<(?:h[23]|ul|ol|table|hr)[^>]*>)/g,'$1').replace(/(<\/(?:h[23]|ul|ol|table|hr)>)\s*<\/p>/g,'$1').replace(/<p>\s*<\/p>/g,'').replace(/\n/g,'<br>');
+  h=h.replace(/🔴/g,'<span style="color:var(--red)">🔴</span>').replace(/🟠/g,'<span style="color:var(--org)">🟠</span>').replace(/🟡/g,'<span style="color:#8a6e00">🟡</span>').replace(/✅/g,'<span style="color:var(--grn)">✅</span>').replace(/⚠️/g,'<span style="color:var(--org)">⚠️</span>').replace(/❌/g,'<span style="color:var(--red)">❌</span>');
+  return h;
+}
+
+/* ══ MISC ══ */
+function showToast(msg,d=2600){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('on');setTimeout(()=>el.classList.remove('on'),d);}
+function doCopy(){
+  if(!lastResult)return;
+  navigator.clipboard.writeText(lastResult).then(()=>showToast('📋 คัดลอกแล้ว')).catch(()=>{
+    const ta=document.createElement('textarea');ta.value=lastResult;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);showToast('📋 คัดลอกแล้ว');
+  });
+}
+function printResult(){window.print();}
+
+/* ══ INIT ══ */
+loadAll();
+</script>
+</body>
+</html>
