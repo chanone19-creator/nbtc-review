@@ -458,8 +458,8 @@ let lastResult='', RD={per:'',veh:'',eqp:''}, bak={}, SRCS=[];
 function lsG(k){try{return localStorage.getItem(k);}catch{return null;}}
 function lsS(k,v){try{localStorage.setItem(k,v);}catch{}}
 function loadAll(){
-  const rd=lsG('nbtc_rd'); RD=rd?JSON.parse(rd):{...DEFS};
-  const sr=lsG('nbtc_srcs'); SRCS=sr?JSON.parse(sr):[];
+  const rd=lsG('nbtc_rd'); try{RD=rd?JSON.parse(rd):{...DEFS};}catch{RD={...DEFS};}
+  const sr=lsG('nbtc_srcs'); try{SRCS=sr?JSON.parse(sr):[];}catch{SRCS=[];}
   SRCS.forEach(s=>{if(s.b64)delete s.b64;});
   renderRD(); renderSrcs();
 }
@@ -662,7 +662,7 @@ function checkDoc(text){
   }
   // คำสะกดผิด
   const SPELL_CHECKS=[
-    {wrong:'พายุฤดร้อน',right:'พายุฤดูร้อน'},{wrong:'อนุมัติ',right:'อนุมัติ'}, // placeholder - keep checking
+    {wrong:'พายุฤดร้อน',right:'พายุฤดูร้อน'},
     {wrong:'อินเตอร์เน็ต',right:'อินเทอร์เน็ต'},{wrong:'ปฏิบัตการ',right:'ปฏิบัติการ'},
     {wrong:'รายงาณ',right:'รายงาน'},{wrong:'วิทยุกระจายเสืยง',right:'วิทยุกระจายเสียง'},
   ];
@@ -703,7 +703,10 @@ function checkDoc(text){
   // จำนวนนับในเนื้อหา (ตัวเลขเดี่ยวก่อน นาที คน ราย สถานี แผ่น)
   const countRx=/\b([0-9]+)\s*(คน|ราย|สถานี|แผ่น|ฉบับ|รายการ|กิจกรรม|ครั้ง|ชุด)/g;
   const countMs=[...fullText.matchAll(countRx)];
+  const seenCountPat=new Set();
   countMs.forEach(m=>{
+    if(seenCountPat.has(m[0]))return;
+    seenCountPat.add(m[0]);
     issues.push({sev:'red',cat:'ตัวเลข',title:'จำนวนนับต้องใช้เลขไทย',detail:`จำนวน ${m[1]} ${m[2]} ต้องใช้เลขไทย`,old:m[0],fix:toThaiNum(m[1])+' '+m[2]});
   });
 
@@ -756,7 +759,7 @@ function renderRuleResult(text, issues){
         <span class="issue-title">${i.title}</span>
       </div>
       <div class="issue-detail">${i.detail}</div>
-      ${i.old&&i.fix?`<div class="issue-diff"><span class="diff-old">${i.old}</span><span style="color:#aaa">→</span><span class="diff-new">${i.fix}</span></div>`:''}
+      ${i.old&&i.fix?`<div class="issue-diff"><span class="diff-old">${esc(i.old)}</span><span style="color:#aaa">→</span><span class="diff-new">${esc(i.fix)}</span></div>`:''}
     </div>`).join('')}
   </div>`:'<div class="sec-title">✅ ไม่พบข้อผิดพลาดที่ตรวจจับได้โดยอัตโนมัติ</div><div style="font-size:13px;color:#888;padding:8px 0">โปรดตรวจสอบเนื้อหาและความถูกต้องของข้อมูลเพิ่มเติมด้วยตนเอง</div>'}
 
@@ -837,7 +840,7 @@ async function doReview(){
     clearInterval(timer);
     document.getElementById('spinW').classList.remove('on');
     document.getElementById('resContent').style.display='block';
-    document.getElementById('resContent').innerHTML=`<div style="padding:14px;background:rgba(184,50,50,.05);border:1px solid rgba(184,50,50,.2);border-radius:6px"><strong style="color:var(--red)">❌ เกิดข้อผิดพลาด</strong><br><span style="font-size:12.5px;color:#555">${err.message}</span></div>`;
+    document.getElementById('resContent').innerHTML=`<div style="padding:14px;background:rgba(184,50,50,.05);border:1px solid rgba(184,50,50,.2);border-radius:6px"><strong style="color:var(--red)">❌ เกิดข้อผิดพลาด</strong><br><span style="font-size:12.5px;color:#555">${esc(err.message)}</span></div>`;
   }
   btn.disabled=false;btn.innerHTML='<span>🔍</span> ตรวจทานเอกสาร';
 }
@@ -866,7 +869,7 @@ function renderRD(){
   renderBdg('veh-bdg',(RD.veh||'').split('\n').filter(x=>x.trim()));
   renderBdg('eqp-bdg',(RD.eqp||'').split('\n').filter(x=>x.trim()));
 }
-function renderBdg(id,items){document.getElementById(id).innerHTML=items.map(i=>`<span class="bdg">${i.trim()}</span>`).join('');}
+function renderBdg(id,items){document.getElementById(id).innerHTML=items.map(i=>`<span class="bdg">${esc(i.trim())}</span>`).join('');}
 function tEdit(k){
   if(document.getElementById(k+'-e').style.display!=='none'){cnRef(k);return;}
   bak[k]=RD[k]; document.getElementById(k+'-ta').value=RD[k]||'';
@@ -1005,7 +1008,7 @@ function renderFL(g){
       e:'<span class="fc-st st-e">❌ อ่านไม่ได้</span>'
     };
     const d=document.createElement('div');d.className='fchip';
-    d.innerHTML=`<span class="fc-ico">${ficon(e.name)}</span><span class="fc-nm" title="${e.name}">${e.name}</span><span class="fc-sz">${fsize(e.size)}</span>${stMap[e.status]||''}<button class="fc-del" onclick="delF('${g}','${e.id}')">×</button>`;
+    d.innerHTML=`<span class="fc-ico">${ficon(e.name)}</span><span class="fc-nm" title="${esc(e.name)}">${esc(e.name)}</span><span class="fc-sz">${fsize(e.size)}</span>${stMap[e.status]||''}<button class="fc-del" onclick="delF('${g}','${e.id}')">×</button>`;
     el.appendChild(d);
   });
 }
