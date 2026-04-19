@@ -342,6 +342,25 @@ input[type=text]:focus,input[type=url]:focus{border-color:var(--gold)}
 <!-- ════ RIGHT ════ -->
 <div class="col-s">
   <div class="card">
+    <div class="ch"><div class="ci">🧠</div><div class="ct">Skill / System Prompt</div></div>
+    <div class="cb" style="padding:12px">
+      <div id="skillStatus" style="font-size:11.5px;margin-bottom:8px;padding:7px 10px;border-radius:5px;background:rgba(42,110,58,.07);border:1px solid rgba(42,110,58,.2);color:var(--grn);display:flex;align-items:center;gap:6px">
+        <span>📋</span><span id="skillStatusTxt">ใช้ Default Skill (6 หมวด)</span>
+      </div>
+      <div class="dz" id="skillDZ" ondragover="dov(event,'skillDZ')" ondragleave="dlv('skillDZ')" ondrop="skillDrop(event)" style="padding:12px 8px">
+        <input type="file" accept=".md,.txt" onchange="skillPick(event)">
+        <div style="font-size:12px;font-weight:600;color:var(--blue)">📂 อัปโหลด Skill File</div>
+        <div style="font-size:10.5px;color:#aaa;margin-top:3px">รองรับ .md และ .txt</div>
+      </div>
+      <div id="skillClearRow" style="display:none;margin-top:6px">
+        <button onclick="clearSkill()" style="width:100%;padding:5px;background:#fff;border:1px solid var(--rule);border-radius:4px;font-family:inherit;font-size:11px;color:var(--red);cursor:pointer">🗑️ ลบ Skill — กลับใช้ Default</button>
+      </div>
+      <div style="font-size:10px;color:#bbb;margin-top:6px;line-height:1.5">
+        ใช้ได้กับโหมด Gemini AI และ Ollama AI เท่านั้น<br>ข้อมูลอ้างอิง (บุคลากร/รถ/อุปกรณ์) จะแนบต่อท้ายอัตโนมัติ
+      </div>
+    </div>
+  </div>
+  <div class="card">
     <div class="ch"><div class="ci">🗄️</div><div class="ct">ฐานข้อมูลอ้างอิง</div></div>
     <div class="cb" style="padding:12px">
       <div class="ref-sec">
@@ -476,7 +495,8 @@ function loadAll(){
   const sr=lsG('nbtc_srcs'); try{SRCS=sr?JSON.parse(sr):[];}catch{SRCS=[];}
   SRCS.forEach(s=>{if(s.b64)delete s.b64;});
   const gk=lsG('nbtc_gkey'); if(gk)document.getElementById('geminiKey').value=gk;
-  renderRD(); renderSrcs();
+  const sk=lsG('nbtc_skill'); if(sk){customSkill=sk;customSkillName=lsG('nbtc_skill_name')||'skill.md';}
+  renderRD(); renderSrcs(); renderSkillStatus();
 }
 function saveAll(){
   lsS('nbtc_rd',JSON.stringify(RD));
@@ -490,6 +510,38 @@ function setMode(m,btn){
   document.getElementById('ollamaOpts').style.display=m==='ollama'?'flex':'none';
   document.getElementById('geminiOpts').style.display=m==='gemini'?'flex':'none';
 }
+/* ══ SKILL FILE ══ */
+let customSkill='', customSkillName='';
+function renderSkillStatus(){
+  const hasSk=customSkill.trim().length>0;
+  const box=document.getElementById('skillStatus');
+  const txt=document.getElementById('skillStatusTxt');
+  const clr=document.getElementById('skillClearRow');
+  if(hasSk){
+    box.style.background='rgba(201,146,26,.08)';box.style.borderColor='rgba(201,146,26,.3)';box.style.color='var(--gold)';
+    txt.textContent='🧠 '+customSkillName+' ('+Math.round(customSkill.length/1000)+'K ตัวอักษร)';
+    clr.style.display='block';
+  }else{
+    box.style.background='rgba(42,110,58,.07)';box.style.borderColor='rgba(42,110,58,.2)';box.style.color='var(--grn)';
+    txt.textContent='📋 ใช้ Default Skill (6 หมวด)';
+    clr.style.display='none';
+  }
+}
+async function loadSkillFile(f){
+  if(!f)return;
+  customSkillName=f.name;
+  customSkill=await f.text();
+  lsS('nbtc_skill',customSkill);lsS('nbtc_skill_name',f.name);
+  renderSkillStatus();showToast('🧠 โหลด Skill: '+f.name);
+}
+function skillPick(e){const f=e.target.files[0];if(f)loadSkillFile(f);e.target.value='';}
+function skillDrop(e){e.preventDefault();dlv('skillDZ');const f=e.dataTransfer.files[0];if(f)loadSkillFile(f);}
+function clearSkill(){
+  customSkill='';customSkillName='';
+  lsS('nbtc_skill','');lsS('nbtc_skill_name','');
+  renderSkillStatus();showToast('📋 กลับใช้ Default Skill แล้ว');
+}
+
 function toggleGeminiKey(){
   const el=document.getElementById('geminiKey');
   const eye=document.getElementById('geminiEye');
@@ -1067,6 +1119,10 @@ function delF(g,id){FS[g]=FS[g].filter(e=>String(e.id)!==id);renderFL(g);}
 
 /* ══ OLLAMA SYSTEM PROMPT ══ */
 function buildSys(){
+  const refBlock=`\n\n════════════════════════════════════════\nข้อมูลอ้างอิงสำนักงาน กสทช. เขต ๑๖ (ปัจจุบัน)\n════════════════════════════════════════\nบุคลากร:\n${RD.per}\n\nทะเบียนรถ:\n${RD.veh}\n\nอุปกรณ์ตรวจสอบ:\n${RD.eqp}`;
+  if(customSkill.trim()){
+    return customSkill.replace(/\$\{RD\.per\}/g,RD.per).replace(/\$\{RD\.veh\}/g,RD.veh).replace(/\$\{RD\.eqp\}/g,RD.eqp)+refBlock;
+  }
   return `ในฐานะผู้เชี่ยวชาญระดับสูงด้านงานสารบรรณและธุรการของหน่วยงานราชการไทย โปรดตรวจทานร่างหนังสือราชการ/บันทึกข้อความที่แนบมา โดยเปรียบเทียบกับเอกสารอ้างอิง ตามเกณฑ์ต่อไปนี้อย่างละเอียด
 
 ════════════════════════════════════════
