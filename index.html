@@ -257,12 +257,26 @@ input[type=text]:focus,input[type=url]:focus{border-color:var(--gold)}
     <div class="mode-btns">
       <button class="mbtn on" onclick="setMode('rule',this)">📋 Rule-Based (ไม่ต้องอินเทอร์เน็ต)</button>
       <button class="mbtn" onclick="setMode('ollama',this)">🤖 Ollama AI (Local LLM)</button>
+      <button class="mbtn" onclick="setMode('gemini',this)">✨ Gemini AI</button>
     </div>
-    <div id="ollamaOpts" style="display:none;display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+    <div id="ollamaOpts" style="display:none;align-items:center;gap:7px;flex-wrap:wrap">
       <input class="ollama-url" id="ollamaUrl" value="http://localhost:11434" placeholder="http://localhost:11434">
       <select class="ollama-model" id="ollamaModel"><option value="llama3.2">llama3.2</option><option value="llama3.1">llama3.1</option><option value="typhoon2">typhoon2</option><option value="openthaigpt">openthaigpt</option><option value="custom">กรอกเอง...</option></select>
       <button class="btn-check-ollama" onclick="checkOllama()">🔌 ทดสอบ</button>
       <span class="ollama-status os-no" id="ollamaStatus">⚪ ยังไม่ทดสอบ</span>
+    </div>
+    <div id="geminiOpts" style="display:none;align-items:center;gap:7px;flex-wrap:wrap">
+      <div style="position:relative;display:flex;align-items:center">
+        <input class="ollama-url" id="geminiKey" type="password" placeholder="Gemini API Key (AIza...)" style="width:230px;padding-right:32px" oninput="saveGeminiKey()">
+        <button onclick="toggleGeminiKey()" style="position:absolute;right:6px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:14px;padding:0;line-height:1" id="geminiEye">👁</button>
+      </div>
+      <select class="ollama-model" id="geminiModel">
+        <option value="gemini-2.0-flash">gemini-2.0-flash (เร็ว)</option>
+        <option value="gemini-2.5-pro-preview-05-06">gemini-2.5-pro (ฉลาดที่สุด)</option>
+        <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+        <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+      </select>
+      <span class="ollama-status" id="geminiStatus" style="color:rgba(255,255,255,.4);font-size:11px">🔑 กรอก API Key แล้วตรวจทานได้เลย</span>
     </div>
   </div>
 </div>
@@ -414,23 +428,23 @@ input[type=text]:focus,input[type=url]:focus{border-color:var(--gold)}
 ══════════════════════════════════════ */
 const DEFS={
 per:`นายพงศกร แก้วจันทร์เหนือ (ผภภ.16)
-นายชานนท์ คราประยูร (วก.ก1)
+นายชานนท์ คราประยูร (วก.ก1/นตภ./วิศวกรปฏิบัติการระดับสูง)
 นายแถลงการณ์ สีจันทร์อ่อน (นตป.ก1)
 นายเสนีย์ สุมณฑา (นตป.ก2)
 นายยุทธการ เทพรักษ์ (นตป.ก2)
 นายอนันต์ ศิริธร (นตป.ก2)
 นายรุ่งจันทร์ แซ่หลี (นตป.ก2)
-นายวสวัท เอนกนันท์ (นตป.ก2 รก.นบภ.)
+นายวสวัท เอนกนันท์ (นตป.ก2 รก. นบภ.)
 นายคณิน จินดากุล (นนผ.ก3)
-นายทักษยศ พฤติภาพไพบูลย์ (นนผ.ก2)
+นายทักษยศ พฤติภาพไพบูลย์ (นนผ.ก2/นผภ.)
 นายภควัต ภูวพานิช (นตป.ก2)
 นางสาวปภพพร ชื่นชม (นนผ.ก2)
 นายพศวีร์ พุดชู (นนผ.ก3)
 นายธีรพัฒน์ สรวยศรีเมือง (นนผ.ก1)
 นางสาวสมิตานัน คล่องบัญชี (นจท.ก2)
 นางสาวปัทมา ปรีชา (นจท.ก2)
-นายพิสิฐพงศ์ พูลสุข (ลูกจ้าง)
-นายธวัชชัย เสลานนท์ (ลูกจ้าง)`,
+นายพิสิฐพงศ์ พูลสุข (ลูกจ้างชั่วคราว)
+นายธวัชชัย เสลานนท์ (ลูกจ้างชั่วคราว)`,
 veh:`4 ขฉ 7455 กทม.
 4 ขฉ 7186 กทม.
 1 นจ 3165 กทม.
@@ -439,15 +453,15 @@ veh:`4 ขฉ 7455 กทม.
 eqp:`Spectrum Analyzer KEYSIGHT N9938A
 Mobile Network Scanner TSMA6B
 AOR Digital Voice Receiver DV1 (100800101972)
-ROHDE & SCHWARZ PR100 (4079.9011K02-104307-nz)
-PR100 HE400HF (4104.8002.02-101958-xb)
-PR100 HE400VHF (4104.8202.02-101756-Tg)
-PR100 HE400UWB (4104.6900.02-102044-EX)
+ROHDE & SCHWARZ PR100 (4079.9011K02-104307-nz) 9 kHz–7.5 GHz
+PR100 HE400HF (4104.8002.02-101958-xb) 8.3 kHz–30 MHz
+PR100 HE400VHF (4104.8202.02-101756-Tg) 20 MHz–200 MHz
+PR100 HE400UWB (4104.6900.02-102044-EX) 30 MHz–6 GHz
 Promax Ranger Neo 4
 ROHDE & SCHWARZ CMA180
 Narda SRM-3006
-ICOM IC-2300H
-สถานีตรวจสอบ Remote Control`};
+เครื่องรับ-ส่งวิทยุ ICOM IC-2300H (ติดรถยนต์)
+สถานีตรวจสอบการใช้ความถี่ฯ ระบบควบคุมระยะไกล (Remote Control)`};
 
 const DOC_NAMES={A:'บันทึกข้อความ',B:'หนังสือภายนอก',C:'หนังสือสั่งการ',D:'หนังสือประชาสัมพันธ์',E:'รายงาน/แบบรายงาน',F:'เอกสารเฉพาะ/แบบฟอร์ม'};
 let docType='A', reviewMode='rule';
@@ -458,9 +472,10 @@ let lastResult='', RD={per:'',veh:'',eqp:''}, bak={}, SRCS=[];
 function lsG(k){try{return localStorage.getItem(k);}catch{return null;}}
 function lsS(k,v){try{localStorage.setItem(k,v);}catch{}}
 function loadAll(){
-  const rd=lsG('nbtc_rd'); RD=rd?JSON.parse(rd):{...DEFS};
-  const sr=lsG('nbtc_srcs'); SRCS=sr?JSON.parse(sr):[];
+  const rd=lsG('nbtc_rd'); try{RD=rd?JSON.parse(rd):{...DEFS};}catch{RD={...DEFS};}
+  const sr=lsG('nbtc_srcs'); try{SRCS=sr?JSON.parse(sr):[];}catch{SRCS=[];}
   SRCS.forEach(s=>{if(s.b64)delete s.b64;});
+  const gk=lsG('nbtc_gkey'); if(gk)document.getElementById('geminiKey').value=gk;
   renderRD(); renderSrcs();
 }
 function saveAll(){
@@ -472,9 +487,16 @@ function saveAll(){
 function setMode(m,btn){
   reviewMode=m;
   document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
-  const oo=document.getElementById('ollamaOpts');
-  oo.style.display=m==='ollama'?'flex':'none';
+  document.getElementById('ollamaOpts').style.display=m==='ollama'?'flex':'none';
+  document.getElementById('geminiOpts').style.display=m==='gemini'?'flex':'none';
 }
+function toggleGeminiKey(){
+  const el=document.getElementById('geminiKey');
+  const eye=document.getElementById('geminiEye');
+  el.type=el.type==='password'?'text':'password';
+  eye.textContent=el.type==='password'?'👁':'🙈';
+}
+function saveGeminiKey(){lsS('nbtc_gkey',document.getElementById('geminiKey').value);}
 
 async function checkOllama(){
   const url=document.getElementById('ollamaUrl').value.trim();
@@ -662,7 +684,7 @@ function checkDoc(text){
   }
   // คำสะกดผิด
   const SPELL_CHECKS=[
-    {wrong:'พายุฤดร้อน',right:'พายุฤดูร้อน'},{wrong:'อนุมัติ',right:'อนุมัติ'}, // placeholder - keep checking
+    {wrong:'พายุฤดร้อน',right:'พายุฤดูร้อน'},
     {wrong:'อินเตอร์เน็ต',right:'อินเทอร์เน็ต'},{wrong:'ปฏิบัตการ',right:'ปฏิบัติการ'},
     {wrong:'รายงาณ',right:'รายงาน'},{wrong:'วิทยุกระจายเสืยง',right:'วิทยุกระจายเสียง'},
   ];
@@ -703,7 +725,10 @@ function checkDoc(text){
   // จำนวนนับในเนื้อหา (ตัวเลขเดี่ยวก่อน นาที คน ราย สถานี แผ่น)
   const countRx=/\b([0-9]+)\s*(คน|ราย|สถานี|แผ่น|ฉบับ|รายการ|กิจกรรม|ครั้ง|ชุด)/g;
   const countMs=[...fullText.matchAll(countRx)];
+  const seenCountPat=new Set();
   countMs.forEach(m=>{
+    if(seenCountPat.has(m[0]))return;
+    seenCountPat.add(m[0]);
     issues.push({sev:'red',cat:'ตัวเลข',title:'จำนวนนับต้องใช้เลขไทย',detail:`จำนวน ${m[1]} ${m[2]} ต้องใช้เลขไทย`,old:m[0],fix:toThaiNum(m[1])+' '+m[2]});
   });
 
@@ -756,7 +781,7 @@ function renderRuleResult(text, issues){
         <span class="issue-title">${i.title}</span>
       </div>
       <div class="issue-detail">${i.detail}</div>
-      ${i.old&&i.fix?`<div class="issue-diff"><span class="diff-old">${i.old}</span><span style="color:#aaa">→</span><span class="diff-new">${i.fix}</span></div>`:''}
+      ${i.old&&i.fix?`<div class="issue-diff"><span class="diff-old">${esc(i.old)}</span><span style="color:#aaa">→</span><span class="diff-new">${esc(i.fix)}</span></div>`:''}
     </div>`).join('')}
   </div>`:'<div class="sec-title">✅ ไม่พบข้อผิดพลาดที่ตรวจจับได้โดยอัตโนมัติ</div><div style="font-size:13px;color:#888;padding:8px 0">โปรดตรวจสอบเนื้อหาและความถูกต้องของข้อมูลเพิ่มเติมด้วยตนเอง</div>'}
 
@@ -780,6 +805,34 @@ async function callOllama(docText, refText){
   if(!resp.ok) throw new Error('Ollama HTTP '+resp.status);
   const d=await resp.json();
   return d.message?.content||d.response||JSON.stringify(d);
+}
+
+/* ── GEMINI CALL ── */
+async function callGemini(docText, refText){
+  const key=document.getElementById('geminiKey').value.trim();
+  if(!key) throw new Error('กรุณากรอก Gemini API Key ในช่อง ✨ Gemini AI');
+  const model=document.getElementById('geminiModel').value;
+  const sys=buildSys();
+  const userMsg=`ประเภทเอกสาร: ${DOC_NAMES[docType]}\n\nร่างเอกสาร:\n---\n${docText}\n---\n${refText?'\nเอกสารอ้างอิง:\n---\n'+refText+'\n---':''}\n\nโปรดตรวจทานตามเกณฑ์ 6 หมวด และแสดงผลตามรูปแบบ ส่วนที่ 0–5`;
+  const st=document.getElementById('geminiStatus');
+  if(st){st.style.color='var(--gold-lt)';st.textContent='⏳ กำลังประมวลผล...';}
+  const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      system_instruction:{parts:[{text:sys}]},
+      contents:[{role:'user',parts:[{text:userMsg}]}],
+      generationConfig:{temperature:0.1,topP:0.95,maxOutputTokens:8192}
+    })
+  });
+  if(!resp.ok){
+    const e=await resp.json().catch(()=>({}));
+    if(st){st.style.color='var(--red)';st.textContent='❌ '+resp.status;}
+    throw new Error('Gemini HTTP '+resp.status+': '+(e?.error?.message||'ไม่สามารถเชื่อมต่อได้'));
+  }
+  const d=await resp.json();
+  if(st){st.style.color='#6ee7b7';st.textContent='✅ สำเร็จ';}
+  return d.candidates?.[0]?.content?.parts?.[0]?.text||JSON.stringify(d);
 }
 
 /* ══ SUBMIT ══ */
@@ -822,9 +875,10 @@ async function doReview(){
       steps.forEach(s=>{s.classList.remove('act');s.classList.add('done');});
       html=renderRuleResult(docTxt,issues);
     } else {
-      document.getElementById('spinTxt').textContent='กำลังส่งให้ Ollama AI...';
+      const modeName=reviewMode==='gemini'?'Gemini AI':'Ollama AI';
+      document.getElementById('spinTxt').textContent='กำลังส่งให้ '+modeName+'...';
       const refTxt=getAllRefText();
-      const aiResult=await callOllama(docTxt, refTxt);
+      const aiResult=reviewMode==='gemini'?await callGemini(docTxt,refTxt):await callOllama(docTxt,refTxt);
       clearInterval(timer);
       steps.forEach(s=>{s.classList.remove('act');s.classList.add('done');});
       lastResult=aiResult;
@@ -837,7 +891,7 @@ async function doReview(){
     clearInterval(timer);
     document.getElementById('spinW').classList.remove('on');
     document.getElementById('resContent').style.display='block';
-    document.getElementById('resContent').innerHTML=`<div style="padding:14px;background:rgba(184,50,50,.05);border:1px solid rgba(184,50,50,.2);border-radius:6px"><strong style="color:var(--red)">❌ เกิดข้อผิดพลาด</strong><br><span style="font-size:12.5px;color:#555">${err.message}</span></div>`;
+    document.getElementById('resContent').innerHTML=`<div style="padding:14px;background:rgba(184,50,50,.05);border:1px solid rgba(184,50,50,.2);border-radius:6px"><strong style="color:var(--red)">❌ เกิดข้อผิดพลาด</strong><br><span style="font-size:12.5px;color:#555">${esc(err.message)}</span></div>`;
   }
   btn.disabled=false;btn.innerHTML='<span>🔍</span> ตรวจทานเอกสาร';
 }
@@ -866,7 +920,7 @@ function renderRD(){
   renderBdg('veh-bdg',(RD.veh||'').split('\n').filter(x=>x.trim()));
   renderBdg('eqp-bdg',(RD.eqp||'').split('\n').filter(x=>x.trim()));
 }
-function renderBdg(id,items){document.getElementById(id).innerHTML=items.map(i=>`<span class="bdg">${i.trim()}</span>`).join('');}
+function renderBdg(id,items){document.getElementById(id).innerHTML=items.map(i=>`<span class="bdg">${esc(i.trim())}</span>`).join('');}
 function tEdit(k){
   if(document.getElementById(k+'-e').style.display!=='none'){cnRef(k);return;}
   bak[k]=RD[k]; document.getElementById(k+'-ta').value=RD[k]||'';
@@ -1005,7 +1059,7 @@ function renderFL(g){
       e:'<span class="fc-st st-e">❌ อ่านไม่ได้</span>'
     };
     const d=document.createElement('div');d.className='fchip';
-    d.innerHTML=`<span class="fc-ico">${ficon(e.name)}</span><span class="fc-nm" title="${e.name}">${e.name}</span><span class="fc-sz">${fsize(e.size)}</span>${stMap[e.status]||''}<button class="fc-del" onclick="delF('${g}','${e.id}')">×</button>`;
+    d.innerHTML=`<span class="fc-ico">${ficon(e.name)}</span><span class="fc-nm" title="${esc(e.name)}">${esc(e.name)}</span><span class="fc-sz">${fsize(e.size)}</span>${stMap[e.status]||''}<button class="fc-del" onclick="delF('${g}','${e.id}')">×</button>`;
     el.appendChild(d);
   });
 }
@@ -1013,15 +1067,171 @@ function delF(g,id){FS[g]=FS[g].filter(e=>String(e.id)!==id);renderFL(g);}
 
 /* ══ OLLAMA SYSTEM PROMPT ══ */
 function buildSys(){
-  return `ผู้เชี่ยวชาญงานสารบรรณไทย ตรวจเอกสารตามเกณฑ์ 6 หมวด:
-1.ระเบียบสารบรรณ — โครงสร้าง/วันที่ครบ/ชื่อเรื่องวลีนาม/ย่อหน้า/ลงนาม/"สำนักงาน กสทช. เขต ๑๖"
-2.ข้อมูล — ชื่อบุคคล/ทะเบียนรถ/รหัสอุปกรณ์/วันที่/เลขที่
-3.ภาษาราชการ — ทางการ/สะกด/ช่องว่าง
-4.วัตถุประสงค์ — คำลงท้าย
-5.รูปแบบพิมพ์
-6.ตัวเลขไทย/อารบิก (สแกนทุกตัว)
-ฐานข้อมูล:บุคลากร:\n${RD.per}\nทะเบียนรถ:\n${RD.veh}\nอุปกรณ์:\n${RD.eqp}
-ตอบเป็นภาษาไทย แสดง ## หัวข้อ และตาราง Markdown`;
+  return `ในฐานะผู้เชี่ยวชาญระดับสูงด้านงานสารบรรณและธุรการของหน่วยงานราชการไทย โปรดตรวจทานร่างหนังสือราชการ/บันทึกข้อความที่แนบมา โดยเปรียบเทียบกับเอกสารอ้างอิง ตามเกณฑ์ต่อไปนี้อย่างละเอียด
+
+════════════════════════════════════════
+ขั้นตอนการทำงาน (ปฏิบัติตามลำดับก่อนเริ่มตรวจ)
+════════════════════════════════════════
+
+ขั้นที่ 0 — ระบุประเภทเอกสาร
+A) บันทึกข้อความ (หนังสือภายใน)
+B) หนังสือภายนอก (กระดาษตราครุฑ)
+C) หนังสือสั่งการ (คำสั่ง/ระเบียบ/ข้อบังคับ)
+D) หนังสือประชาสัมพันธ์ (ประกาศ/แถลงการณ์/ข่าว)
+E) รายงาน/แบบรายงาน
+F) เอกสารเฉพาะ (ใบขออนุญาตใช้รถ/ใบเบิก/แบบฟอร์ม)
+
+ขั้นที่ 1 — อ่านเอกสารทั้งหมดก่อนเริ่มตรวจ
+ขั้นที่ 2 — ตรวจตามเกณฑ์ทุกหมวด (หมวด 1–6) โดยใช้ข้อมูลอ้างอิงหมวด 7
+ขั้นที่ 3 — จัดทำผลลัพธ์ตามรูปแบบที่กำหนด (ส่วนที่ 0–5)
+
+════════════════════════════════════════
+เกณฑ์การตรวจสอบ
+════════════════════════════════════════
+
+1. ความถูกต้องตามระเบียบงานสารบรรณ
+   (ระเบียบสำนักนายกรัฐมนตรี ว่าด้วยงานสารบรรณ พ.ศ. ๒๕๒๖ และที่แก้ไขเพิ่มเติม)
+
+   1.1 ตรวจส่วนประกอบครบถ้วน: ส่วนหัว / เลขที่ / ชั้นความเร็ว-ลับ / วันที่ / เรื่อง / เรียน / อ้างถึง / สิ่งที่ส่งมาด้วย / เนื้อหา / คำลงท้าย / ลงชื่อ / ตำแหน่ง
+
+   1.2 Checklist ส่วนหัว
+   - ส่วนราชการ: ต้องเป็น "สำนักงาน กสทช. เขต ๑๖" (มีช่องว่างหลัง "กสทช.")
+     บันทึกข้อความ: ต้องระบุเบอร์โทรศัพท์และโทรสาร (ถ้ามี) ด้วย
+   - ที่: มีเลขทะเบียนส่ง รูปแบบ สทช ๒๒๐๒.๖/XXXX (ห้ามเว้นว่าง)
+   - วันที่: ครบ วัน เดือน ปี เช่น "๑๑ เมษายน ๒๕๖๙" (ไม่ต้องใส่ "พ.ศ.")
+   - เขต ๑๖: ใช้เลขไทยทั้งหมด (พบบ่อย: "เขต ๑6" — 6 อารบิกแฝง)
+   - ชื่อเรื่อง: ขึ้นต้นด้วยวลีนาม ไม่ใช่กริยา ตรงกับเอกสารอ้างอิง
+   - เรียน: ภายใน → "เรียน ผภภ.๑๖" / ถึงผู้บังคับบัญชาระดับสูง → ตำแหน่งเต็ม
+   - อ้างถึง: หนังสือตอบ/ต่อเนื่องต้องมี เรียงตามลำดับเวลา (เก่าสุดก่อน)
+   - สิ่งที่ส่งมาด้วย: ระบุชื่อและนับจำนวนให้ตรง
+
+   1.3 โครงสร้างย่อหน้า
+   - ย่อหน้าแรก: ขึ้นต้นด้วย "ด้วย" (เรื่องใหม่) / "ตาม/ตามที่" (อ้างอิงเรื่องเดิม) / "เนื่องจาก" เท่านั้น
+     ตรวจว่าใช้คำขึ้นต้นตรงกับบริบท (พบบ่อย: ใช้ "ด้วย" ทั้งที่เป็นหนังสือตอบ)
+   - ย่อหน้าสุดท้าย: "จึงเรียนมาเพื่อโปรด..." สอดคล้องกับบริบท
+
+   1.4 คำขึ้นต้น คำลงท้าย สรรพนาม
+   - บันทึกข้อความภายใน: ไม่มีคำลงท้าย "ขอแสดงความนับถือ"
+   - ไม่ใช้ชื่อเล่นหรือคำเรียกไม่เป็นทางการ
+   - สรรพนามสม่ำเสมอตลอดทั้งฉบับ (ไม่สลับ "ข้าพเจ้า" กับ "สำนักงาน")
+
+   1.5 ตำแหน่งผู้ลงนาม
+   - ระบุตำแหน่งเต็ม เช่น "ผู้อำนวยการสำนักงาน กสทช. เขต ๑๖ ปฏิบัติการแทน เลขาธิการ กสทช."
+   - ชื่อ-นามสกุลตรงกับรายชื่อบุคลากรในฐานข้อมูล
+
+   1.6 การอ้างอิงเอกสาร
+   - เลขที่หนังสือครบ รวมเลขปีต่อท้าย
+   - วันที่และชื่อเรื่องตรงกับต้นฉบับ
+   - เรียงตามลำดับเวลา (เก่าสุดก่อน)
+
+2. ความสอดคล้องของข้อมูลและข้อเท็จจริง
+
+   - ครอบคลุมประเด็นสำคัญจากต้นเรื่องครบ
+   - ชื่อบุคคล ตำแหน่ง: ตรวจสะกดทุกตัวอักษร เทียบกับฐานข้อมูลบุคลากร
+   - วันที่: ตรวจทั้งวัน เดือน ปี แยกกัน (อาจถูกวันแต่ผิดเดือน)
+   - ตัวเลข (ราย/คน/สถานี/แผ่น): ตรงกับเอกสารอ้างอิง
+   - ทะเบียนรถ: ตรวจช่องว่างด้วย "1 นจ 3165" ไม่ใช่ "1นจ 3165"
+   - รหัสอุปกรณ์: ตรงกับฐานข้อมูล เช่น "N9938A" ไม่ใช่ "N9938"
+   - ความถี่วิทยุ: ตรงกับเอกสารอ้างอิง (พบบ่อย: "97.50" แต่จริงคือ "97.25 MHz")
+   - ลำดับเลข: ไม่ซ้ำ ไม่ขาดหาย
+   - จำนวนสิ่งที่ส่งมาด้วย: นับจำนวนจริงให้ตรง
+   - ปีในเอกสารแนบ: ตรงกับบันทึกหลัก
+
+3. การใช้ภาษาราชการ การสะกด และวรรคตอน
+
+   3.1 ภาษาและการสะกด
+   - ภาษาทางการ สละสลวย กระชับ ตรงประเด็น
+   - ไม่ใช้คำภาษาพูด: "ทางไลน์" → "ผ่านช่องทางการสื่อสารภายใน"
+   - คำสะกด: "พายุฤดูร้อน" / "ปฏิบัติการ" / "อินเทอร์เน็ต" / "สังเกต" / "อนุมัติ"
+   - "สำนักงาน กสทช. เขต ๑๖" — มีช่องว่างหลัง "กสทช."
+   - "ฯพณฯ" / "ฯลฯ" ใช้เครื่องหมาย ฯ ถูกต้อง
+   - ไม่ใช้คำย่อโดยไม่เขียนคำเต็มครั้งแรก (ยกเว้น ผภภ. / นตป. / นนผ.)
+
+   3.2 ช่องว่างและวรรคตอน
+   - ช่องว่างระหว่างชื่อ-นามสกุล (พบบ่อย: "นายชานนท์คราประยูร" ติดกัน)
+   - มีช่องว่างหลัง "ฯ" ก่อนคำถัดไป
+   - เครื่องหมาย () / "" จับคู่ครบ
+   - ไม่มีช่องว่างซ้ำ (double space)
+
+   3.3 ความสม่ำเสมอ
+   - ใช้คำเดียวกันเรียกสิ่งเดียวกันตลอด (ไม่สลับ "สถานี" กับ "สถานีวิทยุ")
+   - คำย่อตำแหน่งสม่ำเสมอ
+
+4. วัตถุประสงค์และข้อเสนอ
+
+   สูตรคำลงท้าย:
+   - รายงานให้ทราบ → "จึงเรียนมาเพื่อโปรดทราบ"
+   - รายงาน+ดำเนินการต่อ → "จึงเรียนมาเพื่อโปรดทราบและพิจารณาดำเนินการต่อไปด้วย จะขอบพระคุณยิ่ง"
+   - ขออนุมัติ → "จึงเรียนมาเพื่อโปรดพิจารณาอนุมัติด้วย จะขอบพระคุณยิ่ง"
+   - ขอลงนาม → "จึงเรียนมาเพื่อโปรดลงนาม"
+   - ส่งเรื่องต่อ → "จึงเรียนมาเพื่อโปรดพิจารณา หากเห็นชอบ ขอได้โปรดลงนามส่งต่อไป"
+   - บันทึกข้อความ: ไม่มีคำลงท้าย "ขอแสดงความนับถือ"
+
+5. รูปแบบการจัดพิมพ์
+   - ฟอนต์: TH SarabunIT๙ 16 pt / บันทึกข้อความ หัวข้อ: 29 pt
+   - ระยะขอบ: ซ้าย 3 ซม. / ขวา 2 ซม. / บน 2.5 ซม. / ล่าง ~2 ซม.
+   - ระยะบรรทัด: Single Space / ย่อหน้า: 2.5 ซม.
+   - บันทึกข้อความ: ไม่มี "เรียน" ในส่วนหัว
+   - ไม่มีตารางซ้ำที่ควรอยู่ในเอกสารแนบ
+
+6. การใช้ตัวเลข (ตรวจสแกนทุกตัวเลขในเอกสาร)
+
+   ใช้เลขไทย: เลขที่เอกสาร / ลำดับที่ / วันที่-เดือน-ปีพ.ศ. / จำนวนนับ (ราย/คน/สถานี/แผ่น/กิจกรรม/ครั้ง/ชุด) / เบอร์โทรในหัว / หัวข้อ ข้อ ๑. ๒.
+   ใช้เลขอารบิก: ความถี่/ค่าเทคนิค (97.25 MHz) / ทะเบียนรถ / รหัสอุปกรณ์/Serial / พิกัด GPS
+
+   ข้อห้าม:
+   - "0" อารบิก ≠ "๐" ไทย — ตรวจทุกจุดในเลขที่เอกสาร (พบบ่อย: "สทช ๒๔0๙/๔๔๗" มี 0 อารบิกแฝง)
+   - ห้ามผสมเลขไทยและอารบิกในตัวเลขเดียวกัน (เช่น "เขต ๑6" หรือ "๒0 มีนาคม")
+   - ปีพุทธศักราช: "๒๕๖๙" ไม่ใช่ "2569"
+   - จำนวนนับ: "๑ สถานี" ไม่ใช่ "1 สถานี"
+
+════════════════════════════════════════
+ข้อมูลอ้างอิงสำนักงาน กสทช. เขต ๑๖
+════════════════════════════════════════
+
+สังกัด: สำนักงาน กสทช. ภาค 1 (ภภ.1)
+พื้นที่รับผิดชอบ: ราชบุรี / นครปฐม / เพชรบุรี / สมุทรสาคร / สมุทรสงคราม
+
+บุคลากร:
+${RD.per}
+
+ทะเบียนรถ:
+${RD.veh}
+
+อุปกรณ์ตรวจสอบ:
+${RD.eqp}
+
+════════════════════════════════════════
+รูปแบบผลลัพธ์ที่ต้องการ
+════════════════════════════════════════
+
+ส่วนที่ 0 — ข้อมูลเอกสารที่ตรวจ
+ระบุ: ประเภทเอกสาร / เลขที่ / วันที่ / เรื่อง / ผู้ลงนาม และรายชื่อเอกสารอ้างอิง (ถ้ามี)
+
+ส่วนที่ 1 — ภาพรวมข้อผิดพลาดหลัก
+จัดลำดับ: 🔴 ร้ายแรง (ต้องแก้ก่อนลงนาม) / 🟠 สำคัญ / 🟡 ควรแก้
+พร้อมจำนวนข้อผิดพลาดแต่ละระดับ
+
+ส่วนที่ 2 — ตารางจุดที่ควรแก้ไข
+| ลำดับ | ตำแหน่ง | ระดับ | ประเภทข้อผิดพลาด | ข้อความเดิม | ข้อความที่เสนอแก้ไข | เหตุผล |
+ประเภทข้อผิดพลาด: โครงสร้างหนังสือ / ข้อมูล-ข้อเท็จจริง / ภาษาราชการ-การสะกด / วันที่-เลขที่เอกสาร / รูปแบบการจัดพิมพ์ / การใช้ตัวเลข / วัตถุประสงค์-ข้อเสนอ / ช่องว่าง-วรรคตอน
+
+ส่วนที่ 3 — ตารางตรวจสอบข้อมูลสำคัญ (ถ้ามีเอกสารอ้างอิง)
+| รายการเปรียบเทียบ | ในร่าง | ในเอกสารอ้างอิง | สถานะ ✅/⚠️/❌ |
+
+ส่วนที่ 4 — ข้อสังเกตเพิ่มเติม (ถ้ามี)
+
+ส่วนที่ 5 — สรุปความพร้อมของเอกสาร
+✅ พร้อมลงนาม / ⚠️ ต้องแก้ไขก่อนลงนาม (X จุดร้ายแรง, Y จุดสำคัญ) / ❌ ต้องจัดทำใหม่
+
+════════════════════════════════════════
+หมายเหตุสำหรับผู้ตรวจ
+════════════════════════════════════════
+- ถ้าไม่มีเอกสารอ้างอิง: ข้ามการเทียบหมวด 2 แต่ยังตรวจหมวดอื่นครบ และระบุว่า "ไม่มีเอกสารอ้างอิง"
+- ตรวจตัวเลขทุกตัวโดยไม่ข้ามแม้แต่ตัวเดียว
+- ถ้าไม่แน่ใจ ระบุ ⚠️ ต้องยืนยัน แทนการฟันธง
+- ห้าม hallucinate ข้อผิดพลาด
+- ตอบเป็นภาษาไทย แสดง ## หัวข้อ และตาราง Markdown`;
 }
 
 /* ══ MARKDOWN ══ */
