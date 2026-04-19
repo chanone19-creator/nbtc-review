@@ -257,12 +257,26 @@ input[type=text]:focus,input[type=url]:focus{border-color:var(--gold)}
     <div class="mode-btns">
       <button class="mbtn on" onclick="setMode('rule',this)">📋 Rule-Based (ไม่ต้องอินเทอร์เน็ต)</button>
       <button class="mbtn" onclick="setMode('ollama',this)">🤖 Ollama AI (Local LLM)</button>
+      <button class="mbtn" onclick="setMode('gemini',this)">✨ Gemini AI</button>
     </div>
-    <div id="ollamaOpts" style="display:none;display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+    <div id="ollamaOpts" style="display:none;align-items:center;gap:7px;flex-wrap:wrap">
       <input class="ollama-url" id="ollamaUrl" value="http://localhost:11434" placeholder="http://localhost:11434">
       <select class="ollama-model" id="ollamaModel"><option value="llama3.2">llama3.2</option><option value="llama3.1">llama3.1</option><option value="typhoon2">typhoon2</option><option value="openthaigpt">openthaigpt</option><option value="custom">กรอกเอง...</option></select>
       <button class="btn-check-ollama" onclick="checkOllama()">🔌 ทดสอบ</button>
       <span class="ollama-status os-no" id="ollamaStatus">⚪ ยังไม่ทดสอบ</span>
+    </div>
+    <div id="geminiOpts" style="display:none;align-items:center;gap:7px;flex-wrap:wrap">
+      <div style="position:relative;display:flex;align-items:center">
+        <input class="ollama-url" id="geminiKey" type="password" placeholder="Gemini API Key (AIza...)" style="width:230px;padding-right:32px" oninput="saveGeminiKey()">
+        <button onclick="toggleGeminiKey()" style="position:absolute;right:6px;background:none;border:none;cursor:pointer;color:rgba(255,255,255,.5);font-size:14px;padding:0;line-height:1" id="geminiEye">👁</button>
+      </div>
+      <select class="ollama-model" id="geminiModel">
+        <option value="gemini-2.0-flash">gemini-2.0-flash (เร็ว)</option>
+        <option value="gemini-2.5-pro-preview-05-06">gemini-2.5-pro (ฉลาดที่สุด)</option>
+        <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+        <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+      </select>
+      <span class="ollama-status" id="geminiStatus" style="color:rgba(255,255,255,.4);font-size:11px">🔑 กรอก API Key แล้วตรวจทานได้เลย</span>
     </div>
   </div>
 </div>
@@ -461,6 +475,7 @@ function loadAll(){
   const rd=lsG('nbtc_rd'); try{RD=rd?JSON.parse(rd):{...DEFS};}catch{RD={...DEFS};}
   const sr=lsG('nbtc_srcs'); try{SRCS=sr?JSON.parse(sr):[];}catch{SRCS=[];}
   SRCS.forEach(s=>{if(s.b64)delete s.b64;});
+  const gk=lsG('nbtc_gkey'); if(gk)document.getElementById('geminiKey').value=gk;
   renderRD(); renderSrcs();
 }
 function saveAll(){
@@ -472,9 +487,16 @@ function saveAll(){
 function setMode(m,btn){
   reviewMode=m;
   document.querySelectorAll('.mbtn').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
-  const oo=document.getElementById('ollamaOpts');
-  oo.style.display=m==='ollama'?'flex':'none';
+  document.getElementById('ollamaOpts').style.display=m==='ollama'?'flex':'none';
+  document.getElementById('geminiOpts').style.display=m==='gemini'?'flex':'none';
 }
+function toggleGeminiKey(){
+  const el=document.getElementById('geminiKey');
+  const eye=document.getElementById('geminiEye');
+  el.type=el.type==='password'?'text':'password';
+  eye.textContent=el.type==='password'?'👁':'🙈';
+}
+function saveGeminiKey(){lsS('nbtc_gkey',document.getElementById('geminiKey').value);}
 
 async function checkOllama(){
   const url=document.getElementById('ollamaUrl').value.trim();
@@ -785,6 +807,34 @@ async function callOllama(docText, refText){
   return d.message?.content||d.response||JSON.stringify(d);
 }
 
+/* ── GEMINI CALL ── */
+async function callGemini(docText, refText){
+  const key=document.getElementById('geminiKey').value.trim();
+  if(!key) throw new Error('กรุณากรอก Gemini API Key ในช่อง ✨ Gemini AI');
+  const model=document.getElementById('geminiModel').value;
+  const sys=buildSys();
+  const userMsg=`ประเภทเอกสาร: ${DOC_NAMES[docType]}\n\nร่างเอกสาร:\n---\n${docText}\n---\n${refText?'\nเอกสารอ้างอิง:\n---\n'+refText+'\n---':''}\n\nโปรดตรวจทานตามเกณฑ์ 6 หมวด และแสดงผลตามรูปแบบ ส่วนที่ 0–5`;
+  const st=document.getElementById('geminiStatus');
+  if(st){st.style.color='var(--gold-lt)';st.textContent='⏳ กำลังประมวลผล...';}
+  const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      system_instruction:{parts:[{text:sys}]},
+      contents:[{role:'user',parts:[{text:userMsg}]}],
+      generationConfig:{temperature:0.1,topP:0.95,maxOutputTokens:8192}
+    })
+  });
+  if(!resp.ok){
+    const e=await resp.json().catch(()=>({}));
+    if(st){st.style.color='var(--red)';st.textContent='❌ '+resp.status;}
+    throw new Error('Gemini HTTP '+resp.status+': '+(e?.error?.message||'ไม่สามารถเชื่อมต่อได้'));
+  }
+  const d=await resp.json();
+  if(st){st.style.color='#6ee7b7';st.textContent='✅ สำเร็จ';}
+  return d.candidates?.[0]?.content?.parts?.[0]?.text||JSON.stringify(d);
+}
+
 /* ══ SUBMIT ══ */
 async function doReview(){
   // ตรวจว่ายังมีไฟล์ที่กำลังอ่านอยู่หรือไม่
@@ -825,9 +875,10 @@ async function doReview(){
       steps.forEach(s=>{s.classList.remove('act');s.classList.add('done');});
       html=renderRuleResult(docTxt,issues);
     } else {
-      document.getElementById('spinTxt').textContent='กำลังส่งให้ Ollama AI...';
+      const modeName=reviewMode==='gemini'?'Gemini AI':'Ollama AI';
+      document.getElementById('spinTxt').textContent='กำลังส่งให้ '+modeName+'...';
       const refTxt=getAllRefText();
-      const aiResult=await callOllama(docTxt, refTxt);
+      const aiResult=reviewMode==='gemini'?await callGemini(docTxt,refTxt):await callOllama(docTxt,refTxt);
       clearInterval(timer);
       steps.forEach(s=>{s.classList.remove('act');s.classList.add('done');});
       lastResult=aiResult;
